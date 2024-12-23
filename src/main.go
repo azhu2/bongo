@@ -1,11 +1,12 @@
 package main
 
 import (
-	"context"
-	"fmt"
+	"github.com/azhu2/bongo/src/gateway/importer"
+	"go.uber.org/fx"
 )
 
 func main() {
-	context.Background()
-	fmt.Println("Hello world!")
+	fx.New(
+		importer.Module,
+	).Run()
 }
