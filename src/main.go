@@ -19,7 +19,7 @@ func main() {
 			lifecycle.Append(fx.StartHook(func(ctx context.Context) {
 				err := handler.Solve(ctx)
 				if err != nil {
-					fmt.Print(err)
+					fmt.Println(err)
 				}
 				shutdowner.Shutdown()
 			}))

@@ -2,7 +2,7 @@ package entity
 
 type Board struct {
 	Tiles       []Tile
-	Multipliers [][]int
+	Multipliers [][]int // Grid of multipliers - (0, 0) is bottom-left
 	BonusWord   [][]int // Slice of [x,y] coords
 }
 
