@@ -46,7 +46,7 @@ func New(p Params) (Results, error) {
 func (h *handler) Solve(ctx context.Context) error {
 	board, err := h.importer.ImportBoard(ctx)
 
-	if err == nil {
+	if err != nil {
 		return err
 	}
 

@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/azhu2/bongo/src/controller/solver"
 	"github.com/azhu2/bongo/src/gateway/importer"
@@ -16,7 +17,10 @@ func main() {
 		solver.Module,
 		fx.Invoke(func(lifecycle fx.Lifecycle, shutdowner fx.Shutdowner, handler handler.Handler) {
 			lifecycle.Append(fx.StartHook(func(ctx context.Context) {
-				handler.Solve(ctx)
+				err := handler.Solve(ctx)
+				if err != nil {
+					fmt.Print(err)
+				}
 				shutdowner.Shutdown()
 			}))
 		}),
