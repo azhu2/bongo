@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"path/filepath"
 	"strconv"
 	"strings"
 
@@ -11,7 +12,7 @@ import (
 	"go.uber.org/fx"
 )
 
-const sourceFile = "../example.txt"
+const sourceFile = "testdata/example.txt"
 
 var Module = fx.Module("importer",
 	fx.Provide(New),
@@ -48,7 +49,9 @@ func (i *importer) ImportBoard(ctx context.Context) (entity.Board, error) {
 
 func (i *importer) loadData(_ context.Context) (string, error) {
 	// TODO Figure out how to make query for data, but graphql might complicate this.
-	raw, err := os.ReadFile(sourceFile)
+	base, _ := os.Getwd()
+	path := filepath.Join(base, sourceFile)
+	raw, err := os.ReadFile(path)
 	if err != nil {
 		return "", err
 	}
@@ -103,6 +106,7 @@ func parseData(lines []string) (entity.Board, error) {
 			return entity.Board{}, err
 		}
 		if existing, ok := board.Tiles[letter]; ok {
+			// Not sure if multiple stacks in UI show up twice or not
 			if existing.Value != tile.Value {
 				return entity.Board{}, fmt.Errorf("duplicate tile with different value: %c", letter)
 			}
