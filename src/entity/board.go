@@ -1,5 +1,9 @@
 package entity
 
+const (
+	BoardSize = 5
+)
+
 type Board struct {
 	Tiles       []Tile
 	Multipliers [][]int // Grid of multipliers - (0, 0) is bottom-left

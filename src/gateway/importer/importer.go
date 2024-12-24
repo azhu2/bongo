@@ -103,7 +103,7 @@ func parseData(lines []string) (entity.Board, error) {
 		board.Tiles = append(board.Tiles, tiles...)
 		idx++
 	}
-	if len(board.Tiles) < 25 {
+	if len(board.Tiles) < entity.BoardSize*entity.BoardSize {
 		return entity.Board{}, fmt.Errorf("incorrect number of tiles found: %d", len(board.Tiles))
 	}
 
@@ -128,8 +128,8 @@ func parseBonusWord(line string) ([][]int, error) {
 
 func parseMultipliers(line string) ([][]int, error) {
 	// Default to 1s everywhere
-	multipliers := make([][]int, 5)
-	for i := 0; i < 5; i++ {
+	multipliers := make([][]int, entity.BoardSize)
+	for i := 0; i < entity.BoardSize; i++ {
 		multipliers[i] = []int{1, 1, 1, 1, 1}
 	}
 
