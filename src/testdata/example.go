@@ -4,6 +4,8 @@ import (
 	"github.com/azhu2/bongo/src/entity"
 )
 
+// This is the board and my solution from 2024-12-23
+
 var Board = entity.Board{
 	Tiles: map[rune]entity.Tile{
 		'W': entity.Tile{Value: 65, Count: 1},
@@ -34,3 +36,15 @@ var Board = entity.Board{
 		[]int{3, 3},
 	},
 }
+
+var Solution = entity.Solution{
+	Board: [][]rune{
+		[]rune("SWORN"),
+		[]rune("SHAME"),
+		[]rune("PLANE"),
+		[]rune("SEEPS"),
+		[]rune("REEDY"),
+	},
+}
+
+const Score = 1265
