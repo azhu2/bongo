@@ -80,7 +80,7 @@ func parseData(lines []string) (entity.Board, error) {
 	idx++
 
 	// Parse bonus word
-	bonus, err := parseBonusWord(lines[idx])
+	bonus, err := parseBonusWord(strings.TrimSpace(lines[idx]))
 	if err != nil {
 		return entity.Board{}, err
 	}
@@ -88,7 +88,7 @@ func parseData(lines []string) (entity.Board, error) {
 	idx++
 
 	// Parse multipliers
-	multipliers, err := parseMultipliers(lines[idx])
+	multipliers, err := parseMultipliers(strings.TrimSpace(lines[idx]))
 	if err != nil {
 		return entity.Board{}, err
 	}
@@ -99,7 +99,7 @@ func parseData(lines []string) (entity.Board, error) {
 	board.Tiles = make(map[rune]entity.Tile)
 	tileCount := 0
 	for lines[idx] != "" {
-		letter, tile, err := parseTile(lines[idx])
+		letter, tile, err := parseTile(strings.TrimSpace(lines[idx]))
 		if err != nil {
 			return entity.Board{}, err
 		}
