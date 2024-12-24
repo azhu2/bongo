@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"math"
+	"strings"
 
 	"github.com/azhu2/bongo/src/entity"
 	"go.uber.org/fx"
@@ -69,6 +70,9 @@ func (s *scorer) Score(ctx context.Context, board entity.Board, solution entity.
 }
 
 func scoreLetter(_ context.Context, board entity.Board, row, col int, letter rune) (int, error) {
+	if letter == ' ' {
+		return 0, nil
+	}
 	tile, ok := board.Tiles[letter]
 	if !ok {
 		return 0, fmt.Errorf("solution has invalid letter: %c", letter)
@@ -77,10 +81,12 @@ func scoreLetter(_ context.Context, board entity.Board, row, col int, letter run
 }
 
 func (s *scorer) wordMultiplier(ctx context.Context, word string) float64 {
-	if !s.isWord(ctx, word) {
+	// Assume no gaps. I'm pretty sure only one word per line is counted.
+	trimmed := strings.TrimSpace(word)
+	if !s.isWord(ctx, trimmed) {
 		return 0
 	}
-	if s.isCommon(ctx, word) {
+	if s.isCommon(ctx, trimmed) {
 		return commonMultiplier
 	}
 	return 1
