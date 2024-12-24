@@ -95,15 +95,26 @@ func parseData(lines []string) (entity.Board, error) {
 	idx++
 
 	// Parse tiles
+	board.Tiles = make(map[rune]entity.Tile)
+	tileCount := 0
 	for lines[idx] != "" {
-		tiles, err := parseTile(lines[idx])
+		letter, tile, err := parseTile(lines[idx])
 		if err != nil {
 			return entity.Board{}, err
 		}
-		board.Tiles = append(board.Tiles, tiles...)
+		if existing, ok := board.Tiles[letter]; ok {
+			if existing.Value != tile.Value {
+				return entity.Board{}, fmt.Errorf("duplicate tile with different value: %c", letter)
+			}
+			existing.Count += tile.Count
+			board.Tiles[letter] = existing
+		} else {
+			board.Tiles[letter] = tile
+		}
+		tileCount += tile.Count
 		idx++
 	}
-	if len(board.Tiles) < entity.BoardSize*entity.BoardSize {
+	if tileCount < entity.BoardSize*entity.BoardSize {
 		return entity.Board{}, fmt.Errorf("incorrect number of tiles found: %d", len(board.Tiles))
 	}
 
@@ -152,22 +163,22 @@ func parseMultipliers(line string) ([][]int, error) {
 	return multipliers, nil
 }
 
-func parseTile(line string) ([]entity.Tile, error) {
+func parseTile(line string) (rune, entity.Tile, error) {
 	parts := strings.Split(line, "x")
 	if len(parts) != 2 {
-		return nil, fmt.Errorf("unable to parse tile: %s", line)
+		return 0, entity.Tile{}, fmt.Errorf("unable to parse tile: %s", line)
 	}
 	letter := ([]rune)(parts[0])
 	if len(letter) != 1 {
-		return nil, fmt.Errorf("unable to parse tile letter: %s", line)
+		return 0, entity.Tile{}, fmt.Errorf("unable to parse tile letter: %s", line)
 	}
 	parts = strings.Split(parts[1], ":")
 	if len(parts) != 2 {
-		return nil, fmt.Errorf("unable to parse tile: %s", line)
+		return 0, entity.Tile{}, fmt.Errorf("unable to parse tile: %s", line)
 	}
 	count, err := strconv.Atoi(parts[0])
 	if err != nil {
-		return nil, fmt.Errorf("unable to parse tile count: %s %w", line, err)
+		return 0, entity.Tile{}, fmt.Errorf("unable to parse tile count: %s %w", line, err)
 	}
 	// Trim occasional parenthetical number. Doesn't seem to serve a purpose
 	valueStr := parts[1]
@@ -176,16 +187,12 @@ func parseTile(line string) ([]entity.Tile, error) {
 	}
 	value, err := strconv.Atoi(valueStr)
 	if err != nil {
-		return nil, fmt.Errorf("unable to parse tile value: %s %w", line, err)
+		return 0, entity.Tile{}, fmt.Errorf("unable to parse tile value: %s %w", line, err)
 	}
-	tiles := make([]entity.Tile, count)
-	for i := 0; i < count; i++ {
-		tiles[i] = entity.Tile{
-			Letter: letter[0],
-			Value:  value,
-		}
-	}
-	return tiles, nil
+	return letter[0], entity.Tile{
+		Value: value,
+		Count: count,
+	}, nil
 }
 
 func parseCoordinate(coord string) (int, int, error) {

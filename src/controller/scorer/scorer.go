@@ -2,6 +2,7 @@ package scorer
 
 import (
 	"context"
+	"fmt"
 	"math"
 
 	"github.com/azhu2/bongo/src/entity"
@@ -17,7 +18,7 @@ var Module = fx.Module("scorer",
 )
 
 type Controller interface {
-	Score(context.Context, entity.Board, entity.Solution) int
+	Score(context.Context, entity.Board, entity.Solution) (int, error)
 }
 
 type Results struct {
@@ -34,37 +35,55 @@ func New() (Results, error) {
 	}, nil
 }
 
-func (s *scorer) Score(ctx context.Context, board entity.Board, solution entity.Solution) int {
+func (s *scorer) Score(ctx context.Context, board entity.Board, solution entity.Solution) (int, error) {
 	score := 0
 
-	for _, row := range solution.Board {
-		score += s.scoreWord(ctx, row)
+	for rowIdx, row := range solution.Board {
+		wordScore := 0
+		for colIdx, letter := range row {
+			letterScore, err := scoreLetter(ctx, board, rowIdx, colIdx, letter)
+			if err != nil {
+				return 0, err
+			}
+			wordScore += letterScore
+		}
+		score += (int)(math.Ceil(s.wordMultiplier(ctx, string(row)) * float64(wordScore)))
 	}
 
-	bonusTiles := make([]entity.Tile, len(board.BonusWord))
+	bonusLetters := make([]rune, len(board.BonusWord))
+	bonusScore := 0
 	for _, coords := range board.BonusWord {
-		bonusTiles = append(bonusTiles, solution.Board[coords[0]][coords[1]])
+		rowIdx := coords[0]
+		colIdx := coords[1]
+		letter := solution.Board[rowIdx][colIdx]
+		bonusLetters = append(bonusLetters, letter)
+		letterScore, err := scoreLetter(ctx, board, rowIdx, colIdx, letter)
+		if err != nil {
+			return 0, err
+		}
+		bonusScore += letterScore
 	}
-	score += s.scoreWord(ctx, bonusTiles)
+	score += (int)(math.Ceil(s.wordMultiplier(ctx, string(bonusLetters)) * float64(bonusScore)))
 
-	return score
+	return score, nil
 }
 
-func (s *scorer) scoreWord(ctx context.Context, tiles []entity.Tile) int {
-	letters := make([]rune, len(tiles))
-	value := 0
-	for _, tile := range tiles {
-		letters = append(letters, tile.Letter)
-		value += tile.Value
+func scoreLetter(_ context.Context, board entity.Board, row, col int, letter rune) (int, error) {
+	tile, ok := board.Tiles[letter]
+	if !ok {
+		return 0, fmt.Errorf("solution has invalid letter: %c", letter)
 	}
-	word := string(letters)
+	return board.Multipliers[row][col] * tile.Value, nil
+}
+
+func (s *scorer) wordMultiplier(ctx context.Context, word string) float64 {
 	if !s.isWord(ctx, word) {
 		return 0
 	}
 	if s.isCommon(ctx, word) {
-		value = (int)(math.Ceil(commonMultiplier * float64(value)))
+		return commonMultiplier
 	}
-	return value
+	return 1
 }
 
 func (s *scorer) isWord(_ context.Context, _ string) bool {
