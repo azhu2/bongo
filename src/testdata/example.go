@@ -21,16 +21,16 @@ var Board = entity.Board{
 		'S': entity.Tile{Value: 5, Count: 4},
 	},
 	Multipliers: [][]int{
-		[]int{1, 1, 2, 1, 1},
-		[]int{1, 1, 1, 2, 3},
-		[]int{1, 1, 1, 1, 1},
+		[]int{1, 3, 1, 1, 1},
+		[]int{1, 2, 1, 1, 1},
+		[]int{2, 1, 1, 1, 1},
 		[]int{1, 1, 1, 1, 1},
 		[]int{1, 1, 1, 1, 1},
 	},
 	BonusWord: [][]int{
-		[]int{1, 4},
-		[]int{1, 3},
+		[]int{0, 1},
+		[]int{1, 1},
 		[]int{2, 2},
-		[]int{3, 1},
+		[]int{3, 3},
 	},
 }

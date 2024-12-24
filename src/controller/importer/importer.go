@@ -197,6 +197,9 @@ func parseTile(line string) (rune, entity.Tile, error) {
 	}, nil
 }
 
+// Flip the coordinate grid
+// Input data is (x,y)/(col,row) with (0,0) as bottom left
+// We'll flip to (row,col) with (0,0) as top left
 func parseCoordinate(coord string) (int, int, error) {
 	stripped := strings.Replace(strings.Replace(coord, "(", "", 1), ")", "", 1)
 	values := strings.Split(stripped, ",")
@@ -211,5 +214,5 @@ func parseCoordinate(coord string) (int, int, error) {
 	if perr != nil {
 		return 0, 0, fmt.Errorf("unable to parse coordinate: %s %w", coord, perr)
 	}
-	return x, y, nil
+	return entity.BoardSize - y - 1, x, nil
 }

@@ -15,6 +15,8 @@ func TestImport(t *testing.T) {
 		board, err := c.ImportBoard(context.Background(), "../../testdata/example.txt")
 		assert.NoError(t, err)
 		assert.NotNil(t, board)
-		assert.Equal(t, testdata.Board, board)
+		assert.Equal(t, testdata.Board.Tiles, board.Tiles, "tiles should match")
+		assert.Equal(t, testdata.Board.Multipliers, board.Multipliers, "multipliers should match")
+		assert.Equal(t, testdata.Board.BonusWord, board.BonusWord, "bonus word should match")
 	})
 }

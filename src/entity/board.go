@@ -6,8 +6,8 @@ const (
 
 type Board struct {
 	Tiles       map[rune]Tile
-	Multipliers [][]int // Grid of multipliers - (0, 0) is bottom-left
-	BonusWord   [][]int // Slice of [x,y] coords
+	Multipliers [][]int // Grid of multipliers
+	BonusWord   [][]int // Slice of [row,col] coords
 }
 
 type Tile struct {
