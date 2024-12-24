@@ -8,14 +8,12 @@ import (
 	"go.uber.org/fx"
 )
 
-const sourceFile = "testdata/example.txt"
-
 var Module = fx.Module("handler",
 	fx.Provide(New),
 )
 
 type Handler interface {
-	Solve(context.Context) error
+	Solve(ctx context.Context, sourceFile string) error
 }
 
 type Params struct {
@@ -45,7 +43,7 @@ func New(p Params) (Results, error) {
 	}, nil
 }
 
-func (h *handler) Solve(ctx context.Context) error {
+func (h *handler) Solve(ctx context.Context, sourceFile string) error {
 	board, err := h.importer.ImportBoard(ctx, sourceFile)
 
 	if err != nil {

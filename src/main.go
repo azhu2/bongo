@@ -10,6 +10,8 @@ import (
 	"go.uber.org/fx"
 )
 
+const sourceFile = "testdata/example.txt"
+
 func main() {
 	fx.New(
 		handler.Module,
@@ -17,7 +19,7 @@ func main() {
 		solver.Module,
 		fx.Invoke(func(lifecycle fx.Lifecycle, shutdowner fx.Shutdowner, handler handler.Handler) {
 			lifecycle.Append(fx.StartHook(func(ctx context.Context) {
-				err := handler.Solve(ctx)
+				err := handler.Solve(ctx, sourceFile)
 				if err != nil {
 					fmt.Println(err)
 				}
