@@ -129,12 +129,12 @@ func parseBonusWord(line string) ([][]int, error) {
 	if len(coords) == 0 {
 		return nil, fmt.Errorf("no bonus word coordinates found")
 	}
-	for _, coord := range coords {
+	for i, coord := range coords {
 		x, y, err := parseCoordinate(coord)
 		if err != nil {
 			return nil, fmt.Errorf("unable to parse bonus word coordinate %w", err)
 		}
-		bonus = append(bonus, []int{x, y})
+		bonus[i] = []int{x, y}
 	}
 	return bonus, nil
 }
