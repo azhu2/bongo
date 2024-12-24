@@ -10,7 +10,7 @@ import (
 	"go.uber.org/fx"
 )
 
-const sourceFile = "testdata/example.txt"
+const sourceFile = "testdata/2024-12-23.txt"
 
 func main() {
 	fx.New(

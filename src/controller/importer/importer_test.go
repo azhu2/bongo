@@ -2,6 +2,7 @@ package importer
 
 import (
 	"context"
+	"fmt"
 	"testing"
 
 	"github.com/azhu2/bongo/src/testdata"
@@ -9,14 +10,16 @@ import (
 )
 
 func TestImport(t *testing.T) {
-	t.Run("2024-12-23 board", func(t *testing.T) {
-		results, _ := New()
-		c := results.Controller
-		board, err := c.ImportBoard(context.Background(), "../../testdata/example.txt")
-		assert.NoError(t, err)
-		assert.NotNil(t, board)
-		assert.Equal(t, testdata.Board.Tiles, board.Tiles, "tiles should match")
-		assert.Equal(t, testdata.Board.Multipliers, board.Multipliers, "multipliers should match")
-		assert.Equal(t, testdata.Board.BonusWord, board.BonusWord, "bonus word should match")
-	})
+	for _, tt := range testdata.TestData {
+		t.Run(tt.Name, func(t *testing.T) {
+			results, _ := New()
+			c := results.Controller
+			board, err := c.ImportBoard(context.Background(), fmt.Sprintf("../../testdata/%s", tt.Filename))
+			assert.NoError(t, err)
+			assert.NotNil(t, board)
+			assert.Equal(t, tt.Board.Tiles, board.Tiles, "tiles should match")
+			assert.Equal(t, tt.Board.Multipliers, board.Multipliers, "multipliers should match")
+			assert.Equal(t, tt.Board.BonusWord, board.BonusWord, "bonus word should match")
+		})
+	}
 }

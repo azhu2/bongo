@@ -9,11 +9,13 @@ import (
 )
 
 func TestScore(t *testing.T) {
-	t.Run("2024-12-23 solution", func(t *testing.T) {
-		results, _ := New()
-		s := results.Controller
-		score, err := s.Score(context.Background(), testdata.Board, testdata.Solution)
-		assert.NoError(t, err)
-		assert.Equal(t, testdata.Score, score)
-	})
+	for _, tt := range testdata.TestData {
+		t.Run(tt.Name, func(t *testing.T) {
+			results, _ := New()
+			s := results.Controller
+			score, err := s.Score(context.Background(), tt.Board, tt.Solution)
+			assert.NoError(t, err)
+			assert.Equal(t, tt.Score, score)
+		})
+	}
 }
