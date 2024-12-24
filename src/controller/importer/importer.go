@@ -12,32 +12,30 @@ import (
 	"go.uber.org/fx"
 )
 
-const sourceFile = "testdata/example.txt"
-
 var Module = fx.Module("importer",
 	fx.Provide(New),
 )
 
-type Gateway interface {
-	ImportBoard(context.Context) (entity.Board, error)
+type Controller interface {
+	ImportBoard(ctx context.Context, sourceFile string) (entity.Board, error)
 }
 
 type Results struct {
 	fx.Out
 
-	Gateway
+	Controller
 }
 
 type importer struct{}
 
 func New() (Results, error) {
 	return Results{
-		Gateway: &importer{},
+		Controller: &importer{},
 	}, nil
 }
 
-func (i *importer) ImportBoard(ctx context.Context) (entity.Board, error) {
-	data, err := i.loadData(ctx)
+func (i *importer) ImportBoard(ctx context.Context, sourceFile string) (entity.Board, error) {
+	data, err := i.loadData(ctx, sourceFile)
 	if err != nil {
 		return entity.Board{}, err
 	}
@@ -47,7 +45,7 @@ func (i *importer) ImportBoard(ctx context.Context) (entity.Board, error) {
 	return parseData(lines)
 }
 
-func (i *importer) loadData(_ context.Context) (string, error) {
+func (i *importer) loadData(_ context.Context, sourceFile string) (string, error) {
 	// TODO Figure out how to make query for data, but graphql might complicate this.
 	base, _ := os.Getwd()
 	path := filepath.Join(base, sourceFile)

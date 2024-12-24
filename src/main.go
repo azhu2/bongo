@@ -4,8 +4,8 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/azhu2/bongo/src/controller/importer"
 	"github.com/azhu2/bongo/src/controller/solver"
-	"github.com/azhu2/bongo/src/gateway/importer"
 	"github.com/azhu2/bongo/src/handler"
 	"go.uber.org/fx"
 )
