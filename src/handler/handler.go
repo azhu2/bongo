@@ -3,7 +3,7 @@ package handler
 import (
 	"context"
 
-	"github.com/azhu2/bongo/src/controller/importer"
+	"github.com/azhu2/bongo/src/controller/parser"
 	"github.com/azhu2/bongo/src/controller/solver"
 	"go.uber.org/fx"
 )
@@ -19,7 +19,7 @@ type Handler interface {
 type Params struct {
 	fx.In
 
-	Importer importer.Controller
+	Importer parser.Controller
 	Solver   solver.Controller
 }
 
@@ -30,7 +30,7 @@ type Results struct {
 }
 
 type handler struct {
-	importer importer.Controller
+	importer parser.Controller
 	solver   solver.Controller
 }
 
@@ -44,7 +44,7 @@ func New(p Params) (Results, error) {
 }
 
 func (h *handler) Solve(ctx context.Context, sourceFile string) error {
-	board, err := h.importer.ImportBoard(ctx, sourceFile)
+	board, err := h.importer.ParseBoard(ctx, sourceFile)
 
 	if err != nil {
 		return err

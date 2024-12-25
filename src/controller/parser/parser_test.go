@@ -1,4 +1,4 @@
-package importer
+package parser
 
 import (
 	"context"
@@ -9,12 +9,12 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestImport(t *testing.T) {
+func TestParseBoard(t *testing.T) {
 	for _, tt := range testdata.TestData {
 		t.Run(tt.Name, func(t *testing.T) {
 			results, _ := New()
 			c := results.Controller
-			board, err := c.ImportBoard(context.Background(), fmt.Sprintf("../../testdata/%s", tt.Filename))
+			board, err := c.ParseBoard(context.Background(), fmt.Sprintf("../../testdata/%s", tt.Filename))
 			assert.NoError(t, err)
 			assert.NotNil(t, board)
 			assert.Equal(t, tt.Board.Tiles, board.Tiles, "tiles should match")

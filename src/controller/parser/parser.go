@@ -1,4 +1,4 @@
-package importer
+package parser
 
 import (
 	"context"
@@ -12,12 +12,12 @@ import (
 	"go.uber.org/fx"
 )
 
-var Module = fx.Module("importer",
+var Module = fx.Module("parser",
 	fx.Provide(New),
 )
 
 type Controller interface {
-	ImportBoard(ctx context.Context, sourceFile string) (entity.Board, error)
+	ParseBoard(ctx context.Context, sourceFile string) (entity.Board, error)
 }
 
 type Results struct {
@@ -26,15 +26,15 @@ type Results struct {
 	Controller
 }
 
-type importer struct{}
+type parser struct{}
 
 func New() (Results, error) {
 	return Results{
-		Controller: &importer{},
+		Controller: &parser{},
 	}, nil
 }
 
-func (i *importer) ImportBoard(ctx context.Context, sourceFile string) (entity.Board, error) {
+func (i *parser) ParseBoard(ctx context.Context, sourceFile string) (entity.Board, error) {
 	data, err := i.loadData(ctx, sourceFile)
 	if err != nil {
 		return entity.Board{}, err
@@ -45,7 +45,8 @@ func (i *importer) ImportBoard(ctx context.Context, sourceFile string) (entity.B
 	return parseData(lines)
 }
 
-func (i *importer) loadData(_ context.Context, sourceFile string) (string, error) {
+// TODO Move this out into a gateway so can swap between files or graphql
+func (i *parser) loadData(_ context.Context, sourceFile string) (string, error) {
 	// TODO Figure out how to make query for data, but graphql might complicate this.
 	base, _ := os.Getwd()
 	path := filepath.Join(base, sourceFile)
