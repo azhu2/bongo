@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/azhu2/bongo/src/config/secrets"
+	"github.com/azhu2/bongo/src/controller/dag"
 	"github.com/azhu2/bongo/src/controller/parser"
 	"github.com/azhu2/bongo/src/controller/solver"
 	"github.com/azhu2/bongo/src/gateway/gameimporter"
@@ -17,6 +18,7 @@ const date = "2024-12-25"
 
 func main() {
 	fx.New(
+		dag.Module,
 		handler.Module,
 		gameimporter.GraphqlModule,
 		parser.Module,

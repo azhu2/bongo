@@ -3,6 +3,7 @@ package handler
 import (
 	"context"
 
+	"github.com/azhu2/bongo/src/controller/dag"
 	"github.com/azhu2/bongo/src/controller/parser"
 	"github.com/azhu2/bongo/src/controller/solver"
 	"github.com/azhu2/bongo/src/gateway/gameimporter"
@@ -22,8 +23,9 @@ type Params struct {
 
 	GameImporter gameimporter.Gateway
 
-	Parser parser.Controller
-	Solver solver.Controller
+	DAGBuilder dag.Controller
+	Parser     parser.Controller
+	Solver     solver.Controller
 }
 
 type Result struct {
@@ -35,8 +37,9 @@ type Result struct {
 type handler struct {
 	gameImporter gameimporter.Gateway
 
-	parser parser.Controller
-	solver solver.Controller
+	dagBuilder dag.Controller
+	parser     parser.Controller
+	solver     solver.Controller
 }
 
 func New(p Params) (Result, error) {
@@ -44,8 +47,9 @@ func New(p Params) (Result, error) {
 		Handler: &handler{
 			gameImporter: p.GameImporter,
 
-			parser: p.Parser,
-			solver: p.Solver,
+			dagBuilder: p.DAGBuilder,
+			parser:     p.Parser,
+			solver:     p.Solver,
 		},
 	}, nil
 }
@@ -58,6 +62,11 @@ func (h *handler) Solve(ctx context.Context, date string) error {
 
 	board, err := h.parser.ParseBoard(ctx, boardData)
 
+	if err != nil {
+		return err
+	}
+
+	_, err = h.dagBuilder.BuildDAG(ctx, board.Tiles)
 	if err != nil {
 		return err
 	}
