@@ -5,11 +5,19 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strconv"
 	"strings"
 
 	"github.com/azhu2/bongo/src/entity"
 	"go.uber.org/fx"
+)
+
+var (
+	boardSizeRegex  = regexp.MustCompile(`(\d)x(\d)`)
+	coordinateRegex = regexp.MustCompile(`\((\d),(\d)\)`)        // (1,4)
+	multiplierRegex = regexp.MustCompile(`(\((\d),(\d)\))x(\d)`) // (1,4)x2
+	tileRegex       = regexp.MustCompile(`(\w)x(\d):(\d+)`)      // Gx2:45(10) - final parenthetical part is ignored
 )
 
 var Module = fx.Module("parser",
@@ -66,7 +74,10 @@ func parseData(lines []string) (entity.Board, error) {
 	idx++
 
 	// Double-check board size
-	if lines[idx] != "5x5" {
+	sizeMatch := boardSizeRegex.FindStringSubmatch(lines[idx])
+	if len(sizeMatch) == 0 ||
+		sizeMatch[1] != strconv.Itoa(entity.BoardSize) ||
+		sizeMatch[2] != strconv.Itoa(entity.BoardSize) {
 		return entity.Board{}, fmt.Errorf("unexpected board size: %s", lines[idx])
 	}
 	idx++
@@ -125,13 +136,14 @@ func parseData(lines []string) (entity.Board, error) {
 }
 
 func parseBonusWord(line string) ([][]int, error) {
-	coords := strings.Split(line, " ")
-	bonus := make([][]int, len(coords))
-	if len(coords) == 0 {
-		return nil, fmt.Errorf("no bonus word coordinates found")
+	matches := coordinateRegex.FindAllStringSubmatch(line, -1)
+	if len(matches) == 0 {
+		return nil, fmt.Errorf("unable to parse bonus word coordinates %s", line)
 	}
-	for i, coord := range coords {
-		x, y, err := parseCoordinate(coord)
+
+	bonus := make([][]int, len(matches))
+	for i, match := range matches {
+		x, y, err := parseCoordinate(match[0])
 		if err != nil {
 			return nil, fmt.Errorf("unable to parse bonus word coordinate %w", err)
 		}
@@ -147,19 +159,19 @@ func parseMultipliers(line string) ([][]int, error) {
 		multipliers[i] = []int{1, 1, 1, 1, 1}
 	}
 
-	entries := strings.Split(line, " ")
-	for _, entry := range entries {
-		vals := strings.Split(entry, "x")
-		if len(vals) != 2 {
-			return nil, fmt.Errorf("unable to parse multiplier: %s", entry)
-		}
-		x, y, err := parseCoordinate(vals[0])
+	matches := multiplierRegex.FindAllStringSubmatch(line, -1)
+	if len(matches) == 0 {
+		return nil, fmt.Errorf("unable to parse multipliers %s", line)
+	}
+	for _, match := range matches {
+		coord := match[1]
+		x, y, err := parseCoordinate(coord)
 		if err != nil {
-			return nil, fmt.Errorf("unable to parse multiplier coordinate: %s %w", vals[0], err)
+			return nil, fmt.Errorf("unable to parse multiplier coordinate: %s %w", coord, err)
 		}
-		multiplier, err := strconv.Atoi(vals[1])
+		multiplier, err := strconv.Atoi(match[4])
 		if err != nil {
-			return nil, fmt.Errorf("unalbe to parse multiplier value: %s %w", vals[1], err)
+			return nil, fmt.Errorf("unable to parse multiplier value: %s %w", match[4], err)
 		}
 		multipliers[x][y] = multiplier
 	}
@@ -167,32 +179,21 @@ func parseMultipliers(line string) ([][]int, error) {
 }
 
 func parseTile(line string) (rune, entity.Tile, error) {
-	parts := strings.Split(line, "x")
-	if len(parts) != 2 {
+	match := tileRegex.FindStringSubmatch(line)
+	if len(match) == 0 {
 		return 0, entity.Tile{}, fmt.Errorf("unable to parse tile: %s", line)
 	}
-	letter := ([]rune)(parts[0])
-	if len(letter) != 1 {
-		return 0, entity.Tile{}, fmt.Errorf("unable to parse tile letter: %s", line)
-	}
-	parts = strings.Split(parts[1], ":")
-	if len(parts) != 2 {
-		return 0, entity.Tile{}, fmt.Errorf("unable to parse tile: %s", line)
-	}
-	count, err := strconv.Atoi(parts[0])
+
+	letter := match[1][0]
+	count, err := strconv.Atoi(match[2])
 	if err != nil {
 		return 0, entity.Tile{}, fmt.Errorf("unable to parse tile count: %s %w", line, err)
 	}
-	// Trim occasional parenthetical number. Doesn't seem to serve a purpose
-	valueStr := parts[1]
-	if strings.Contains(valueStr, "(") {
-		valueStr = parts[1][:strings.Index(parts[1], "(")]
-	}
-	value, err := strconv.Atoi(valueStr)
+	value, err := strconv.Atoi(match[3])
 	if err != nil {
 		return 0, entity.Tile{}, fmt.Errorf("unable to parse tile value: %s %w", line, err)
 	}
-	return letter[0], entity.Tile{
+	return rune(letter), entity.Tile{
 		Value: value,
 		Count: count,
 	}, nil
@@ -202,16 +203,15 @@ func parseTile(line string) (rune, entity.Tile, error) {
 // Input data is (x,y)/(col,row) with (0,0) as bottom left
 // We'll flip to (row,col) with (0,0) as top left
 func parseCoordinate(coord string) (int, int, error) {
-	stripped := strings.Replace(strings.Replace(coord, "(", "", 1), ")", "", 1)
-	values := strings.Split(stripped, ",")
-	if len(values) != 2 {
+	match := coordinateRegex.FindStringSubmatch(coord)
+	if len(match) == 0 {
 		return 0, 0, fmt.Errorf("unable to parse coordinate: %s", coord)
 	}
-	x, perr := strconv.Atoi(values[0])
+	x, perr := strconv.Atoi(match[1])
 	if perr != nil {
 		return 0, 0, fmt.Errorf("unable to parse coordinate: %s %w", coord, perr)
 	}
-	y, perr := strconv.Atoi(values[1])
+	y, perr := strconv.Atoi(match[2])
 	if perr != nil {
 		return 0, 0, fmt.Errorf("unable to parse coordinate: %s %w", coord, perr)
 	}
