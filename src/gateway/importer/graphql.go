@@ -3,9 +3,7 @@ package importer
 import (
 	"context"
 	"fmt"
-	"os"
 
-	"github.com/joho/godotenv"
 	"github.com/machinebox/graphql"
 	"go.uber.org/fx"
 )
@@ -13,10 +11,6 @@ import (
 const (
 	GraphqlEndpoint = "https://www.puzzmo.com/_api/prod/graphql"
 	bongoSlug       = "today:/%s/bongo"
-
-	// Env variables
-	envAuthToken = "AUTH_TOKEN"
-	envUserID    = "USER_ID"
 )
 
 var GraphqlModule = fx.Module("graphqlimporter",
@@ -24,13 +18,18 @@ var GraphqlModule = fx.Module("graphqlimporter",
 )
 
 type graphqlGateway struct {
+	userID    string
+	authToken string
+
 	graphqlClient *graphql.Client
 }
 
 func NewGraphql(p Params) (Result, error) {
-	godotenv.Load()
 	return Result{
 		Gateway: &graphqlGateway{
+			userID:    p.Secrets.UserID,
+			authToken: p.Secrets.AuthToken,
+
 			graphqlClient: p.GraphqlClient,
 		},
 	}, nil
@@ -65,9 +64,9 @@ func (g *graphqlGateway) GetBongoBoard(ctx context.Context, date string) (string
 		"pingOwnerForMultiplayer": true,
 	})
 	req.Header.Set("context-type", "application/json")
-	req.Header.Set("authorization", os.Getenv(envAuthToken))
+	req.Header.Set("authorization", g.authToken)
 	req.Header.Set("auth-provider", "custom")
-	req.Header.Set("puzzmo-gameplay-id", os.Getenv(envUserID))
+	req.Header.Set("puzzmo-gameplay-id", g.userID)
 
 	var resp graphqlBoardResponse
 	err := g.graphqlClient.Run(ctx, req, &resp)

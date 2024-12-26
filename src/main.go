@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/azhu2/bongo/src/config/secrets"
 	"github.com/azhu2/bongo/src/controller/parser"
 	"github.com/azhu2/bongo/src/controller/solver"
 	"github.com/azhu2/bongo/src/gateway/importer"
@@ -19,6 +20,7 @@ func main() {
 		handler.Module,
 		importer.GraphqlModule,
 		parser.Module,
+		secrets.Module,
 		solver.Module,
 		fx.Supply(
 			graphql.NewClient(importer.GraphqlEndpoint),
