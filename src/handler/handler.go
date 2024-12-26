@@ -5,7 +5,7 @@ import (
 
 	"github.com/azhu2/bongo/src/controller/parser"
 	"github.com/azhu2/bongo/src/controller/solver"
-	"github.com/azhu2/bongo/src/gateway/puzzmo"
+	"github.com/azhu2/bongo/src/gateway/graphql"
 	"go.uber.org/fx"
 )
 
@@ -20,7 +20,7 @@ type Handler interface {
 type Params struct {
 	fx.In
 
-	Puzzmo puzzmo.Gateway
+	Graphql graphql.Gateway
 
 	Parser parser.Controller
 	Solver solver.Controller
@@ -33,7 +33,7 @@ type Results struct {
 }
 
 type handler struct {
-	puzzmo puzzmo.Gateway
+	graphql graphql.Gateway
 
 	parser parser.Controller
 	solver solver.Controller
@@ -42,7 +42,7 @@ type handler struct {
 func New(p Params) (Results, error) {
 	return Results{
 		Handler: &handler{
-			puzzmo: p.Puzzmo,
+			graphql: p.Graphql,
 
 			parser: p.Parser,
 			solver: p.Solver,
@@ -51,7 +51,7 @@ func New(p Params) (Results, error) {
 }
 
 func (h *handler) Solve(ctx context.Context, sourceFile string) error {
-	boardData, err := h.puzzmo.GetBongoBoard(ctx, "b72thg31tf")
+	boardData, err := h.graphql.GetBongoBoard(ctx, "b72thg31tf")
 	if err != nil {
 		return err
 	}

@@ -1,4 +1,4 @@
-package puzzmo
+package graphql
 
 type bongoResponse struct {
 	StartOrFindGameplay struct {

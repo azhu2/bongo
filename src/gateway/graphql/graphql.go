@@ -1,24 +1,30 @@
-package puzzmo
+package graphql
 
 import (
 	"context"
 	"fmt"
 
-	"github.com/machinebox/graphql"
+	graphqllib "github.com/machinebox/graphql"
 	"go.uber.org/fx"
 )
 
 const (
-	endpoint  = "https://www.puzzmo.com/_api/prod/graphql"
+	Endpoint  = "https://www.puzzmo.com/_api/prod/graphql"
 	bongoSlug = "play:/bongo/%s"
 )
 
-var Module = fx.Module("puzzmo",
+var Module = fx.Module("graphql",
 	fx.Provide(New),
 )
 
 type Gateway interface {
 	GetBongoBoard(ctx context.Context, gameSlug string) (string, error)
+}
+
+type Params struct {
+	fx.In
+
+	GraphqlClient *graphqllib.Client
 }
 
 type Results struct {
@@ -28,19 +34,19 @@ type Results struct {
 }
 
 type gateway struct {
-	graphqlClient *graphql.Client
+	graphqlClient *graphqllib.Client
 }
 
-func New() (Results, error) {
+func New(p Params) (Results, error) {
 	return Results{
 		Gateway: &gateway{
-			graphqlClient: graphql.NewClient(endpoint),
+			graphqlClient: p.GraphqlClient,
 		},
 	}, nil
 }
 
 func (g *gateway) GetBongoBoard(ctx context.Context, gameSlug string) (string, error) {
-	req := graphql.NewRequest(`
+	req := graphqllib.NewRequest(`
 		query PlayGameScreenQuery(
 			$finderKey: String!
 			$gameContext: StartGameContext!

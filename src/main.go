@@ -6,8 +6,9 @@ import (
 
 	"github.com/azhu2/bongo/src/controller/parser"
 	"github.com/azhu2/bongo/src/controller/solver"
-	"github.com/azhu2/bongo/src/gateway/puzzmo"
+	"github.com/azhu2/bongo/src/gateway/graphql"
 	"github.com/azhu2/bongo/src/handler"
+	graphqllib "github.com/machinebox/graphql"
 	"go.uber.org/fx"
 )
 
@@ -17,8 +18,11 @@ func main() {
 	fx.New(
 		handler.Module,
 		parser.Module,
-		puzzmo.Module,
+		graphql.Module,
 		solver.Module,
+		fx.Provide(
+			func() *graphqllib.Client { return graphqllib.NewClient(graphql.Endpoint) },
+		),
 		fx.Invoke(func(lifecycle fx.Lifecycle, shutdowner fx.Shutdowner, handler handler.Handler) {
 			lifecycle.Append(fx.StartHook(func(ctx context.Context) {
 				err := handler.Solve(ctx, sourceFile)
