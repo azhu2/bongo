@@ -6,6 +6,7 @@ import (
 
 	"github.com/azhu2/bongo/src/controller/parser"
 	"github.com/azhu2/bongo/src/controller/solver"
+	"github.com/azhu2/bongo/src/gateway/puzzmo"
 	"github.com/azhu2/bongo/src/handler"
 	"go.uber.org/fx"
 )
@@ -16,6 +17,7 @@ func main() {
 	fx.New(
 		handler.Module,
 		parser.Module,
+		puzzmo.Module,
 		solver.Module,
 		fx.Invoke(func(lifecycle fx.Lifecycle, shutdowner fx.Shutdowner, handler handler.Handler) {
 			lifecycle.Append(fx.StartHook(func(ctx context.Context) {
