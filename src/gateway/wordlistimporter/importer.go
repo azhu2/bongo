@@ -46,7 +46,7 @@ func (g *gateway) ImportWordList(ctx context.Context) ([]string, error) {
 	if err != nil {
 		return nil, err
 	}
-	rows := strings.Split(string(raw), "\n")
+	rows := strings.Split(strings.ToUpper(string(raw)), "\n")
 	return slices.DeleteFunc(rows,
 		func(word string) bool { return !wordRegex.MatchString(word) },
 	), nil
