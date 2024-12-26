@@ -51,7 +51,7 @@ func New(p Params) (Result, error) {
 }
 
 func (h *handler) Solve(ctx context.Context, date string) error {
-	boardData, err := h.importer.GetBongoBoard(ctx, date)
+	boardData, err := h.importer.ImportBoard(ctx, date)
 	if err != nil {
 		return err
 	}

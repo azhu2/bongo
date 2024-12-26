@@ -35,7 +35,7 @@ func NewGraphql(p Params) (Result, error) {
 	}, nil
 }
 
-func (g *graphqlGateway) GetBongoBoard(ctx context.Context, date string) (string, error) {
+func (g *graphqlGateway) ImportBoard(ctx context.Context, date string) (string, error) {
 	req := graphql.NewRequest(`
 		query PlayGameScreenQuery(
 			$finderKey: String!

@@ -30,7 +30,7 @@ func TestParseBoard(t *testing.T) {
 func extractBoardData(t *testing.T, date string) string {
 	importer, err := importer.NewFile(importer.Params{})
 	require.NoError(t, err)
-	data, err := importer.Gateway.GetBongoBoard(context.Background(), date)
+	data, err := importer.Gateway.ImportBoard(context.Background(), date)
 	require.NoError(t, err)
 	return data
 }

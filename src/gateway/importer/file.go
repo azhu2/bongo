@@ -26,7 +26,7 @@ func NewFile(p Params) (Result, error) {
 	}, nil
 }
 
-func (f *fileImporter) GetBongoBoard(ctx context.Context, date string) (string, error) {
+func (f *fileImporter) ImportBoard(ctx context.Context, date string) (string, error) {
 	_, file, _, _ := runtime.Caller(0)
 	path := filepath.Join(file, fmt.Sprintf(fileFormat, date))
 	raw, err := os.ReadFile(path)
