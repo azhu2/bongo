@@ -12,7 +12,7 @@ import (
 	"go.uber.org/fx"
 )
 
-const sourceFile = "testdata/2024-12-23.txt"
+const date = "2024-12-23"
 
 func main() {
 	fx.New(
@@ -25,7 +25,7 @@ func main() {
 		),
 		fx.Invoke(func(lifecycle fx.Lifecycle, shutdowner fx.Shutdowner, handler handler.Handler) {
 			lifecycle.Append(fx.StartHook(func(ctx context.Context) {
-				err := handler.Solve(ctx, sourceFile)
+				err := handler.Solve(ctx, date)
 				if err != nil {
 					fmt.Println(err)
 				}

@@ -14,7 +14,7 @@ var Module = fx.Module("handler",
 )
 
 type Handler interface {
-	Solve(ctx context.Context, sourceFile string) error
+	Solve(ctx context.Context, date string) error
 }
 
 type Params struct {
@@ -50,8 +50,8 @@ func New(p Params) (Result, error) {
 	}, nil
 }
 
-func (h *handler) Solve(ctx context.Context, sourceFile string) error {
-	boardData, err := h.importer.GetBongoBoard(ctx, "2024-12-24")
+func (h *handler) Solve(ctx context.Context, date string) error {
+	boardData, err := h.importer.GetBongoBoard(ctx, date)
 	if err != nil {
 		return err
 	}

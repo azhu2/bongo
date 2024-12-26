@@ -5,8 +5,7 @@ import (
 )
 
 type testCase struct {
-	Name     string
-	Filename string
+	Date     string
 	Board    entity.Board
 	Solution entity.Solution
 	Score    int
@@ -14,8 +13,7 @@ type testCase struct {
 
 var TestData = []testCase{
 	{
-		Name:     "2024-12-23",
-		Filename: "2024-12-23.txt",
+		Date: "2024-12-23",
 		Board: entity.Board{
 			Tiles: map[rune]entity.Tile{
 				'W': entity.Tile{Value: 65, Count: 1},
@@ -58,8 +56,7 @@ var TestData = []testCase{
 		Score: 1265,
 	},
 	{
-		Name:     "2024-12-24",
-		Filename: "2024-12-24.txt",
+		Date: "2024-12-24",
 		Board: entity.Board{
 			Tiles: map[rune]entity.Tile{
 				'G': entity.Tile{Value: 45, Count: 2},

@@ -29,7 +29,6 @@ func NewGraphql(p Params) (Result, error) {
 	}, nil
 }
 
-// TODO Map date -> slug
 func (g *graphqlGateway) GetBongoBoard(ctx context.Context, gameSlug string) (string, error) {
 	req := graphql.NewRequest(`
 		query PlayGameScreenQuery(
@@ -53,6 +52,8 @@ func (g *graphqlGateway) GetBongoBoard(ctx context.Context, gameSlug string) (st
 			}
 		}
 	`)
+	// TODO Map date -> slug
+	gameSlug = "b72thg31tf"
 	req.Var("finderKey", fmt.Sprintf(bongoSlug, gameSlug))
 	req.Var("gameContext", map[string]any{
 		"partnerSlug":             nil,

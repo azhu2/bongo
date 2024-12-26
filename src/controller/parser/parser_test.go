@@ -2,19 +2,22 @@ package parser
 
 import (
 	"context"
-	"fmt"
 	"testing"
 
+	"github.com/azhu2/bongo/src/gateway/importer"
 	"github.com/azhu2/bongo/src/testdata"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestParseBoard(t *testing.T) {
 	for _, tt := range testdata.TestData {
-		t.Run(tt.Name, func(t *testing.T) {
+		t.Run(tt.Date, func(t *testing.T) {
+			data := extractBoardData(t, tt.Date)
+
 			result, _ := New()
 			c := result.Controller
-			board, err := c.ParseBoard(context.Background(), fmt.Sprintf("../../testdata/%s", tt.Filename))
+			board, err := c.ParseBoard(context.Background(), data)
 			assert.NoError(t, err)
 			assert.NotNil(t, board)
 			assert.Equal(t, tt.Board.Tiles, board.Tiles, "tiles should match")
@@ -22,4 +25,12 @@ func TestParseBoard(t *testing.T) {
 			assert.Equal(t, tt.Board.BonusWord, board.BonusWord, "bonus word should match")
 		})
 	}
+}
+
+func extractBoardData(t *testing.T, date string) string {
+	importer, err := importer.NewFile(importer.Params{})
+	require.NoError(t, err)
+	data, err := importer.Gateway.GetBongoBoard(context.Background(), date)
+	require.NoError(t, err)
+	return data
 }

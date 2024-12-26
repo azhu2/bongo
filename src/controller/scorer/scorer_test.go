@@ -10,7 +10,7 @@ import (
 
 func TestScore(t *testing.T) {
 	for _, tt := range testdata.TestData {
-		t.Run(tt.Name, func(t *testing.T) {
+		t.Run(tt.Date, func(t *testing.T) {
 			result, _ := New()
 			s := result.Controller
 			score, err := s.Score(context.Background(), tt.Board, tt.Solution)
