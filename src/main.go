@@ -13,7 +13,7 @@ import (
 	"go.uber.org/fx"
 )
 
-const date = "2024-12-23"
+const date = "2024-12-25"
 
 func main() {
 	fx.New(

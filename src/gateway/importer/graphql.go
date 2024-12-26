@@ -10,7 +10,7 @@ import (
 
 const (
 	GraphqlEndpoint = "https://www.puzzmo.com/_api/prod/graphql"
-	bongoSlug       = "today:/%s/bongo"
+	gameKey         = "today:/%s/bongo"
 )
 
 var GraphqlModule = fx.Module("graphqlimporter",
@@ -58,7 +58,7 @@ func (g *graphqlGateway) GetBongoBoard(ctx context.Context, date string) (string
 			}
 		}
 	`)
-	req.Var("finderKey", fmt.Sprintf(bongoSlug, date))
+	req.Var("finderKey", fmt.Sprintf(gameKey, date))
 	req.Var("gameContext", map[string]any{
 		"partnerSlug":             nil,
 		"pingOwnerForMultiplayer": true,
