@@ -17,7 +17,7 @@ const date = "2024-12-23"
 func main() {
 	fx.New(
 		handler.Module,
-		importer.GraphqlModule,
+		importer.FileModule,
 		parser.Module,
 		solver.Module,
 		fx.Provide(

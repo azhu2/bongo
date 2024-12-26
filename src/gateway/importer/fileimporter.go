@@ -5,12 +5,13 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"runtime"
 
 	"go.uber.org/fx"
 )
 
 const (
-	fileFormat = "testdata/%s.txt"
+	fileFormat = "../../../testdata/%s.txt"
 )
 
 var FileModule = fx.Module("importer",
@@ -26,8 +27,8 @@ func NewFile(p Params) (Result, error) {
 }
 
 func (f *fileImporter) GetBongoBoard(ctx context.Context, date string) (string, error) {
-	base, _ := os.Getwd()
-	path := filepath.Join(base, fmt.Sprintf(fileFormat, date))
+	_, file, _, _ := runtime.Caller(0)
+	path := filepath.Join(file, fmt.Sprintf(fileFormat, date))
 	raw, err := os.ReadFile(path)
 	if err != nil {
 		return "", err
