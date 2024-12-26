@@ -1,52 +1,37 @@
-package graphql
+package importer
 
 import (
 	"context"
 	"fmt"
 
-	graphqllib "github.com/machinebox/graphql"
+	"github.com/machinebox/graphql"
 	"go.uber.org/fx"
 )
 
 const (
-	Endpoint  = "https://www.puzzmo.com/_api/prod/graphql"
-	bongoSlug = "play:/bongo/%s"
+	GraphqlEndpoint = "https://www.puzzmo.com/_api/prod/graphql"
+	bongoSlug       = "play:/bongo/%s"
 )
 
-var Module = fx.Module("graphql",
-	fx.Provide(New),
+var GraphqlModule = fx.Module("graphqlimporter",
+	fx.Provide(NewGraphql),
 )
 
-type Gateway interface {
-	GetBongoBoard(ctx context.Context, gameSlug string) (string, error)
+type graphqlGateway struct {
+	graphqlClient *graphql.Client
 }
 
-type Params struct {
-	fx.In
-
-	GraphqlClient *graphqllib.Client
-}
-
-type Results struct {
-	fx.Out
-
-	Gateway
-}
-
-type gateway struct {
-	graphqlClient *graphqllib.Client
-}
-
-func New(p Params) (Results, error) {
+func NewGraphql(p Params) (Results, error) {
 	return Results{
-		Gateway: &gateway{
+		Gateway: &graphqlGateway{
 			graphqlClient: p.GraphqlClient,
 		},
 	}, nil
 }
 
-func (g *gateway) GetBongoBoard(ctx context.Context, gameSlug string) (string, error) {
-	req := graphqllib.NewRequest(`
+// TODO Map date -> slug
+func (g *graphqlGateway) GetBongoBoard(ctx context.Context, gameSlug string) (string, error) {
+	req := graphql.NewRequest(`
 		query PlayGameScreenQuery(
 			$finderKey: String!
 			$gameContext: StartGameContext!
@@ -75,7 +60,7 @@ func (g *gateway) GetBongoBoard(ctx context.Context, gameSlug string) (string, e
 	})
 	req.Header.Set("context-type", "application/json")
 
-	var resp bongoResponse
+	var resp graphqlBoardResponse
 	err := g.graphqlClient.Run(ctx, req, &resp)
 	board := resp.StartOrFindGameplay.GamePlayed.Puzzle.Puzzle
 	if err != nil || len(board) == 0 {

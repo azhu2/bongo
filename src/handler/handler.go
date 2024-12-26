@@ -5,7 +5,7 @@ import (
 
 	"github.com/azhu2/bongo/src/controller/parser"
 	"github.com/azhu2/bongo/src/controller/solver"
-	"github.com/azhu2/bongo/src/gateway/graphql"
+	"github.com/azhu2/bongo/src/gateway/importer"
 	"go.uber.org/fx"
 )
 
@@ -20,7 +20,7 @@ type Handler interface {
 type Params struct {
 	fx.In
 
-	Graphql graphql.Gateway
+	Importer importer.Gateway
 
 	Parser parser.Controller
 	Solver solver.Controller
@@ -33,7 +33,7 @@ type Results struct {
 }
 
 type handler struct {
-	graphql graphql.Gateway
+	importer importer.Gateway
 
 	parser parser.Controller
 	solver solver.Controller
@@ -42,7 +42,7 @@ type handler struct {
 func New(p Params) (Results, error) {
 	return Results{
 		Handler: &handler{
-			graphql: p.Graphql,
+			importer: p.Importer,
 
 			parser: p.Parser,
 			solver: p.Solver,
@@ -51,7 +51,7 @@ func New(p Params) (Results, error) {
 }
 
 func (h *handler) Solve(ctx context.Context, sourceFile string) error {
-	boardData, err := h.graphql.GetBongoBoard(ctx, "b72thg31tf")
+	boardData, err := h.importer.GetBongoBoard(ctx, "2024-12-24")
 	if err != nil {
 		return err
 	}

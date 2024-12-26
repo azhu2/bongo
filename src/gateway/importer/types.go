@@ -1,6 +1,6 @@
-package graphql
+package importer
 
-type bongoResponse struct {
+type graphqlBoardResponse struct {
 	StartOrFindGameplay struct {
 		GamePlayed struct {
 			Puzzle struct {
