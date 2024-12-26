@@ -3,14 +3,20 @@ package importer
 import (
 	"context"
 	"fmt"
+	"os"
 
+	"github.com/joho/godotenv"
 	"github.com/machinebox/graphql"
 	"go.uber.org/fx"
 )
 
 const (
 	GraphqlEndpoint = "https://www.puzzmo.com/_api/prod/graphql"
-	bongoSlug       = "play:/bongo/%s"
+	bongoSlug       = "today:/%s/bongo"
+
+	// Env variables
+	envAuthToken = "AUTH_TOKEN"
+	envUserID    = "USER_ID"
 )
 
 var GraphqlModule = fx.Module("graphqlimporter",
@@ -22,6 +28,7 @@ type graphqlGateway struct {
 }
 
 func NewGraphql(p Params) (Result, error) {
+	godotenv.Load()
 	return Result{
 		Gateway: &graphqlGateway{
 			graphqlClient: p.GraphqlClient,
@@ -29,7 +36,7 @@ func NewGraphql(p Params) (Result, error) {
 	}, nil
 }
 
-func (g *graphqlGateway) GetBongoBoard(ctx context.Context, gameSlug string) (string, error) {
+func (g *graphqlGateway) GetBongoBoard(ctx context.Context, date string) (string, error) {
 	req := graphql.NewRequest(`
 		query PlayGameScreenQuery(
 			$finderKey: String!
@@ -45,21 +52,22 @@ func (g *graphqlGateway) GetBongoBoard(ctx context.Context, gameSlug string) (st
 				... on HasGamePlayed {
 				gamePlayed {
 					puzzle {
-					puzzle
+						puzzle
+						}
 					}
-				}
 				}
 			}
 		}
 	`)
-	// TODO Map date -> slug
-	gameSlug = "b72thg31tf"
-	req.Var("finderKey", fmt.Sprintf(bongoSlug, gameSlug))
+	req.Var("finderKey", fmt.Sprintf(bongoSlug, date))
 	req.Var("gameContext", map[string]any{
 		"partnerSlug":             nil,
 		"pingOwnerForMultiplayer": true,
 	})
 	req.Header.Set("context-type", "application/json")
+	req.Header.Set("authorization", os.Getenv(envAuthToken))
+	req.Header.Set("auth-provider", "custom")
+	req.Header.Set("puzzmo-gameplay-id", os.Getenv(envUserID))
 
 	var resp graphqlBoardResponse
 	err := g.graphqlClient.Run(ctx, req, &resp)

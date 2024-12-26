@@ -17,11 +17,11 @@ const date = "2024-12-23"
 func main() {
 	fx.New(
 		handler.Module,
-		importer.FileModule,
+		importer.GraphqlModule,
 		parser.Module,
 		solver.Module,
-		fx.Provide(
-			func() *graphql.Client { return graphql.NewClient(importer.GraphqlEndpoint) },
+		fx.Supply(
+			graphql.NewClient(importer.GraphqlEndpoint),
 		),
 		fx.Invoke(func(lifecycle fx.Lifecycle, shutdowner fx.Shutdowner, handler handler.Handler) {
 			lifecycle.Append(fx.StartHook(func(ctx context.Context) {
