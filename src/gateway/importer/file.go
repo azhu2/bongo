@@ -11,7 +11,7 @@ import (
 )
 
 const (
-	fileFormat = "../../../testdata/%s.txt"
+	fileFormat = "../../../../testdata/%s.txt"
 )
 
 var FileModule = fx.Module("importer",

@@ -4,7 +4,7 @@ import (
 	"context"
 	"testing"
 
-	"github.com/azhu2/bongo/src/testdata"
+	"github.com/azhu2/bongo/testdata"
 	"github.com/stretchr/testify/assert"
 )
 

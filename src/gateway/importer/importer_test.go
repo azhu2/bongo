@@ -5,7 +5,7 @@ import (
 	"testing"
 
 	"github.com/azhu2/bongo/src/config/secrets"
-	"github.com/azhu2/bongo/src/testdata"
+	"github.com/azhu2/bongo/testdata"
 	"github.com/joho/godotenv"
 	"github.com/machinebox/graphql"
 	"github.com/stretchr/testify/assert"
