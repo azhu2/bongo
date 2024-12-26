@@ -1,4 +1,4 @@
-// sample wordlist from https://www.wordfrequency.info/
+// sample free wordlist from https://www.wordfrequency.info/
 the
 be
 and
