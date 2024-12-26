@@ -4,7 +4,7 @@ import (
 	"context"
 	"testing"
 
-	"github.com/azhu2/bongo/src/gateway/importer"
+	"github.com/azhu2/bongo/src/gateway/gameimporter"
 	"github.com/azhu2/bongo/testdata"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -28,7 +28,7 @@ func TestParseBoard(t *testing.T) {
 }
 
 func extractBoardData(t *testing.T, date string) string {
-	importer, err := importer.NewFile(importer.Params{})
+	importer, err := gameimporter.NewFile(gameimporter.Params{})
 	require.NoError(t, err)
 	data, err := importer.Gateway.ImportBoard(context.Background(), date)
 	require.NoError(t, err)

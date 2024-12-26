@@ -1,4 +1,4 @@
-package importer
+package gameimporter
 
 type graphqlBoardResponse struct {
 	StartOrFindGameplay struct {

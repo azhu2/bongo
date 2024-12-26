@@ -5,7 +5,7 @@ import (
 
 	"github.com/azhu2/bongo/src/controller/parser"
 	"github.com/azhu2/bongo/src/controller/solver"
-	"github.com/azhu2/bongo/src/gateway/importer"
+	"github.com/azhu2/bongo/src/gateway/gameimporter"
 	"go.uber.org/fx"
 )
 
@@ -20,7 +20,7 @@ type Handler interface {
 type Params struct {
 	fx.In
 
-	Importer importer.Gateway
+	GameImporter gameimporter.Gateway
 
 	Parser parser.Controller
 	Solver solver.Controller
@@ -33,7 +33,7 @@ type Result struct {
 }
 
 type handler struct {
-	importer importer.Gateway
+	gameImporter gameimporter.Gateway
 
 	parser parser.Controller
 	solver solver.Controller
@@ -42,7 +42,7 @@ type handler struct {
 func New(p Params) (Result, error) {
 	return Result{
 		Handler: &handler{
-			importer: p.Importer,
+			gameImporter: p.GameImporter,
 
 			parser: p.Parser,
 			solver: p.Solver,
@@ -51,7 +51,7 @@ func New(p Params) (Result, error) {
 }
 
 func (h *handler) Solve(ctx context.Context, date string) error {
-	boardData, err := h.importer.ImportBoard(ctx, date)
+	boardData, err := h.gameImporter.ImportBoard(ctx, date)
 	if err != nil {
 		return err
 	}

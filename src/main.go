@@ -7,7 +7,7 @@ import (
 	"github.com/azhu2/bongo/src/config/secrets"
 	"github.com/azhu2/bongo/src/controller/parser"
 	"github.com/azhu2/bongo/src/controller/solver"
-	"github.com/azhu2/bongo/src/gateway/importer"
+	"github.com/azhu2/bongo/src/gateway/gameimporter"
 	"github.com/azhu2/bongo/src/handler"
 	"github.com/machinebox/graphql"
 	"go.uber.org/fx"
@@ -18,12 +18,12 @@ const date = "2024-12-25"
 func main() {
 	fx.New(
 		handler.Module,
-		importer.GraphqlModule,
+		gameimporter.GraphqlModule,
 		parser.Module,
 		secrets.Module,
 		solver.Module,
 		fx.Supply(
-			graphql.NewClient(importer.GraphqlEndpoint),
+			graphql.NewClient(gameimporter.GraphqlEndpoint),
 		),
 		fx.Invoke(func(lifecycle fx.Lifecycle, shutdowner fx.Shutdowner, handler handler.Handler) {
 			lifecycle.Append(fx.StartHook(func(ctx context.Context) {

@@ -1,4 +1,4 @@
-package importer
+package gameimporter
 
 import (
 	"context"
