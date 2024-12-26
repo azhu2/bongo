@@ -14,7 +14,7 @@ import (
 
 const path = "../../../../testdata/word_list.txt"
 
-var wordRegex = regexp.MustCompile(`\d[1-5]`)
+var wordRegex = regexp.MustCompile(`^\w{1,5}$`)
 
 var Module = fx.Module("wordimporter",
 	fx.Provide(New),
@@ -48,6 +48,6 @@ func (g *gateway) ImportWordList(ctx context.Context) ([]string, error) {
 	}
 	rows := strings.Split(string(raw), "\n")
 	return slices.DeleteFunc(rows,
-		func(word string) bool { return wordRegex.MatchString(word) },
+		func(word string) bool { return !wordRegex.MatchString(word) },
 	), nil
 }
