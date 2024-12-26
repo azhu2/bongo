@@ -29,7 +29,7 @@ type Result struct {
 }
 
 func New() (Result, error) {
-	godotenv.Load()
+	godotenv.Load("../.env")
 	userID := os.Getenv(envUserID)
 	if len(userID) == 0 {
 		return Result{}, fmt.Errorf("user ID not set in env")

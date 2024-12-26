@@ -17,7 +17,7 @@ import (
 func TestImportBoard(t *testing.T) {
 	for _, tt := range testdata.TestData {
 		t.Run(tt.Date, func(t *testing.T) {
-			godotenv.Load("../../.env")
+			godotenv.Load("../../../.env")
 			secretResult, err := secrets.New()
 			require.NoError(t, err)
 			params := Params{
