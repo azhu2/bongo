@@ -12,6 +12,7 @@ import (
 	"go.uber.org/fx"
 )
 
+// Temporary word list from https://www.wordfrequency.info/ until Puzzmo wordlist usage clarified
 const path = "../../../../testdata/word_list.txt"
 
 var wordRegex = regexp.MustCompile(`^\w{1,5}$`)
