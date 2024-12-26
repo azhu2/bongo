@@ -3,11 +3,12 @@ package handler
 import (
 	"context"
 
+	"go.uber.org/fx"
+
 	"github.com/azhu2/bongo/src/controller/dag"
 	"github.com/azhu2/bongo/src/controller/parser"
 	"github.com/azhu2/bongo/src/controller/solver"
 	"github.com/azhu2/bongo/src/gateway/gameimporter"
-	"go.uber.org/fx"
 )
 
 var Module = fx.Module("handler",

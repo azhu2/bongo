@@ -4,12 +4,13 @@ import (
 	"context"
 	"testing"
 
-	"github.com/azhu2/bongo/src/config/secrets"
-	"github.com/azhu2/bongo/testdata"
 	"github.com/joho/godotenv"
 	"github.com/machinebox/graphql"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
+	"github.com/azhu2/bongo/src/config/secrets"
+	"github.com/azhu2/bongo/testdata"
 )
 
 // Compare results of graphql and file importer

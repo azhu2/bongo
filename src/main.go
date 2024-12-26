@@ -4,14 +4,15 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/machinebox/graphql"
+	"go.uber.org/fx"
+
 	"github.com/azhu2/bongo/src/config/secrets"
 	"github.com/azhu2/bongo/src/controller/dag"
 	"github.com/azhu2/bongo/src/controller/parser"
 	"github.com/azhu2/bongo/src/controller/solver"
 	"github.com/azhu2/bongo/src/gateway/gameimporter"
 	"github.com/azhu2/bongo/src/handler"
-	"github.com/machinebox/graphql"
-	"go.uber.org/fx"
 )
 
 const date = "2024-12-25"

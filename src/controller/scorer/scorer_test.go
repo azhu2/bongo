@@ -4,8 +4,9 @@ import (
 	"context"
 	"testing"
 
-	"github.com/azhu2/bongo/testdata"
 	"github.com/stretchr/testify/assert"
+
+	"github.com/azhu2/bongo/testdata"
 )
 
 func TestScore(t *testing.T) {

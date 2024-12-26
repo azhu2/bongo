@@ -4,9 +4,10 @@ import (
 	"context"
 	"fmt"
 
+	"go.uber.org/fx"
+
 	"github.com/azhu2/bongo/src/entity"
 	"github.com/azhu2/bongo/src/gateway/wordlistimporter"
-	"go.uber.org/fx"
 )
 
 var Module = fx.Module("dagbuilder",

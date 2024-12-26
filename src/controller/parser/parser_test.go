@@ -4,10 +4,11 @@ import (
 	"context"
 	"testing"
 
-	"github.com/azhu2/bongo/src/gateway/gameimporter"
-	"github.com/azhu2/bongo/testdata"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
+	"github.com/azhu2/bongo/src/gateway/gameimporter"
+	"github.com/azhu2/bongo/testdata"
 )
 
 func TestParseBoard(t *testing.T) {

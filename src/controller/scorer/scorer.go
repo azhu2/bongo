@@ -6,8 +6,9 @@ import (
 	"math"
 	"strings"
 
-	"github.com/azhu2/bongo/src/entity"
 	"go.uber.org/fx"
+
+	"github.com/azhu2/bongo/src/entity"
 )
 
 const (

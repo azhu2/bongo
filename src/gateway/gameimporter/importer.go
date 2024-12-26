@@ -3,9 +3,10 @@ package gameimporter
 import (
 	"context"
 
-	"github.com/azhu2/bongo/src/config/secrets"
 	"github.com/machinebox/graphql"
 	"go.uber.org/fx"
+
+	"github.com/azhu2/bongo/src/config/secrets"
 )
 
 type Gateway interface {

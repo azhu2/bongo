@@ -3,8 +3,9 @@ package solver
 import (
 	"context"
 
-	"github.com/azhu2/bongo/src/entity"
 	"go.uber.org/fx"
+
+	"github.com/azhu2/bongo/src/entity"
 )
 
 var Module = fx.Module("solver",
