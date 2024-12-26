@@ -20,9 +20,10 @@ type Handler interface {
 type Params struct {
 	fx.In
 
-	Importer parser.Controller
-	Puzzmo   puzzmo.Gateway
-	Solver   solver.Controller
+	Puzzmo puzzmo.Gateway
+
+	Parser parser.Controller
+	Solver solver.Controller
 }
 
 type Results struct {
@@ -32,28 +33,30 @@ type Results struct {
 }
 
 type handler struct {
-	importer parser.Controller
-	puzzmo   puzzmo.Gateway
-	solver   solver.Controller
+	puzzmo puzzmo.Gateway
+
+	parser parser.Controller
+	solver solver.Controller
 }
 
 func New(p Params) (Results, error) {
 	return Results{
 		Handler: &handler{
-			importer: p.Importer,
-			puzzmo:   p.Puzzmo,
-			solver:   p.Solver,
+			puzzmo: p.Puzzmo,
+
+			parser: p.Parser,
+			solver: p.Solver,
 		},
 	}, nil
 }
 
 func (h *handler) Solve(ctx context.Context, sourceFile string) error {
-	_, err := h.puzzmo.GetBongoBoard(ctx, "b72thg31tf")
+	boardData, err := h.puzzmo.GetBongoBoard(ctx, "b72thg31tf")
 	if err != nil {
 		return err
 	}
 
-	board, err := h.importer.ParseBoard(ctx, sourceFile)
+	board, err := h.parser.ParseBoard(ctx, boardData)
 
 	if err != nil {
 		return err

@@ -3,8 +3,6 @@ package parser
 import (
 	"context"
 	"fmt"
-	"os"
-	"path/filepath"
 	"regexp"
 	"strconv"
 	"strings"
@@ -25,7 +23,7 @@ var Module = fx.Module("parser",
 )
 
 type Controller interface {
-	ParseBoard(ctx context.Context, sourceFile string) (entity.Board, error)
+	ParseBoard(ctx context.Context, boardData string) (entity.Board, error)
 }
 
 type Results struct {
@@ -42,31 +40,9 @@ func New() (Results, error) {
 	}, nil
 }
 
-func (i *parser) ParseBoard(ctx context.Context, sourceFile string) (entity.Board, error) {
-	data, err := i.loadData(ctx, sourceFile)
-	if err != nil {
-		return entity.Board{}, err
-	}
-
-	lines := strings.Split(data, "\n")
-
-	return parseData(lines)
-}
-
-// TODO Move this out into a gateway so can swap between files or graphql
-func (i *parser) loadData(_ context.Context, sourceFile string) (string, error) {
-	// TODO Figure out how to make query for data, but graphql might complicate this.
-	base, _ := os.Getwd()
-	path := filepath.Join(base, sourceFile)
-	raw, err := os.ReadFile(path)
-	if err != nil {
-		return "", err
-	}
-	return string(raw), nil
-}
-
-func parseData(lines []string) (entity.Board, error) {
+func (i *parser) ParseBoard(ctx context.Context, boardData string) (entity.Board, error) {
 	board := entity.Board{}
+	lines := strings.Split(boardData, "\n")
 
 	idx := 0
 
