@@ -21,8 +21,8 @@ type graphqlGateway struct {
 	graphqlClient *graphql.Client
 }
 
-func NewGraphql(p Params) (Results, error) {
-	return Results{
+func NewGraphql(p Params) (Result, error) {
+	return Result{
 		Gateway: &graphqlGateway{
 			graphqlClient: p.GraphqlClient,
 		},

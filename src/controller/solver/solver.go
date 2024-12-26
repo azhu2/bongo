@@ -15,7 +15,7 @@ type Controller interface {
 	Solve(context.Context, entity.Board) error
 }
 
-type Results struct {
+type Result struct {
 	fx.Out
 
 	Controller
@@ -23,8 +23,8 @@ type Results struct {
 
 type solver struct{}
 
-func New() (Results, error) {
-	return Results{
+func New() (Result, error) {
+	return Result{
 		Controller: &solver{},
 	}, nil
 }

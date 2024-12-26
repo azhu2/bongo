@@ -11,8 +11,8 @@ import (
 func TestScore(t *testing.T) {
 	for _, tt := range testdata.TestData {
 		t.Run(tt.Name, func(t *testing.T) {
-			results, _ := New()
-			s := results.Controller
+			result, _ := New()
+			s := result.Controller
 			score, err := s.Score(context.Background(), tt.Board, tt.Solution)
 			assert.NoError(t, err)
 			assert.Equal(t, tt.Score, score)

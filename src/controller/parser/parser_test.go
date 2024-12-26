@@ -12,8 +12,8 @@ import (
 func TestParseBoard(t *testing.T) {
 	for _, tt := range testdata.TestData {
 		t.Run(tt.Name, func(t *testing.T) {
-			results, _ := New()
-			c := results.Controller
+			result, _ := New()
+			c := result.Controller
 			board, err := c.ParseBoard(context.Background(), fmt.Sprintf("../../testdata/%s", tt.Filename))
 			assert.NoError(t, err)
 			assert.NotNil(t, board)

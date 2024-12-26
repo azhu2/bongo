@@ -17,7 +17,7 @@ type Params struct {
 	GraphqlClient *graphql.Client
 }
 
-type Results struct {
+type Result struct {
 	fx.Out
 
 	Gateway

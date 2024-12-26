@@ -19,8 +19,8 @@ var FileModule = fx.Module("importer",
 
 type fileImporter struct{}
 
-func NewFile(p Params) (Results, error) {
-	return Results{
+func NewFile(p Params) (Result, error) {
+	return Result{
 		Gateway: &fileImporter{},
 	}, nil
 }

@@ -26,7 +26,7 @@ type Controller interface {
 	ParseBoard(ctx context.Context, boardData string) (entity.Board, error)
 }
 
-type Results struct {
+type Result struct {
 	fx.Out
 
 	Controller
@@ -34,8 +34,8 @@ type Results struct {
 
 type parser struct{}
 
-func New() (Results, error) {
-	return Results{
+func New() (Result, error) {
+	return Result{
 		Controller: &parser{},
 	}, nil
 }

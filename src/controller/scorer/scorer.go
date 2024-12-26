@@ -22,7 +22,7 @@ type Controller interface {
 	Score(context.Context, entity.Board, entity.Solution) (int, error)
 }
 
-type Results struct {
+type Result struct {
 	fx.Out
 
 	Controller
@@ -30,8 +30,8 @@ type Results struct {
 
 type scorer struct{}
 
-func New() (Results, error) {
-	return Results{
+func New() (Result, error) {
+	return Result{
 		Controller: &scorer{},
 	}, nil
 }

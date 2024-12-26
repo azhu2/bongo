@@ -26,7 +26,7 @@ type Params struct {
 	Solver solver.Controller
 }
 
-type Results struct {
+type Result struct {
 	fx.Out
 
 	Handler
@@ -39,8 +39,8 @@ type handler struct {
 	solver solver.Controller
 }
 
-func New(p Params) (Results, error) {
-	return Results{
+func New(p Params) (Result, error) {
+	return Result{
 		Handler: &handler{
 			importer: p.Importer,
 
