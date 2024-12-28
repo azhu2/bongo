@@ -15,7 +15,7 @@ import (
 	"github.com/azhu2/bongo/src/handler"
 )
 
-const date = "2024-12-25"
+const date = "2024-12-28"
 
 func main() {
 	slog.SetLogLoggerLevel(slog.LevelDebug)

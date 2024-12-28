@@ -25,7 +25,7 @@ var Module = fx.Module("parser",
 )
 
 type Controller interface {
-	ParseBoard(ctx context.Context, boardData string) (entity.Board, error)
+	ParseBoard(ctx context.Context, boardData string) (*entity.Board, error)
 }
 
 type Result struct {
@@ -42,7 +42,7 @@ func New() (Result, error) {
 	}, nil
 }
 
-func (i *parser) ParseBoard(ctx context.Context, boardData string) (entity.Board, error) {
+func (i *parser) ParseBoard(ctx context.Context, boardData string) (*entity.Board, error) {
 	board := entity.Board{}
 	lines := strings.Split(boardData, "\n")
 
@@ -56,7 +56,7 @@ func (i *parser) ParseBoard(ctx context.Context, boardData string) (entity.Board
 	if len(sizeMatch) == 0 ||
 		sizeMatch[1] != strconv.Itoa(entity.BoardSize) ||
 		sizeMatch[2] != strconv.Itoa(entity.BoardSize) {
-		return entity.Board{}, fmt.Errorf("unexpected board size: %s", lines[idx])
+		return nil, fmt.Errorf("unexpected board size: %s", lines[idx])
 	}
 	idx++
 
@@ -72,7 +72,7 @@ func (i *parser) ParseBoard(ctx context.Context, boardData string) (entity.Board
 	// Parse bonus word
 	bonus, err := parseBonusWord(strings.TrimSpace(lines[idx]))
 	if err != nil {
-		return entity.Board{}, err
+		return nil, err
 	}
 	board.BonusWord = bonus
 	idx++
@@ -80,7 +80,7 @@ func (i *parser) ParseBoard(ctx context.Context, boardData string) (entity.Board
 	// Parse multipliers
 	multipliers, err := parseMultipliers(strings.TrimSpace(lines[idx]))
 	if err != nil {
-		return entity.Board{}, err
+		return nil, err
 	}
 	board.Multipliers = multipliers
 	idx++
@@ -91,12 +91,12 @@ func (i *parser) ParseBoard(ctx context.Context, boardData string) (entity.Board
 	for lines[idx] != "" {
 		letter, tile, err := parseTile(strings.TrimSpace(lines[idx]))
 		if err != nil {
-			return entity.Board{}, err
+			return nil, err
 		}
 		if existing, ok := board.Tiles[letter]; ok {
 			// Not sure if multiple stacks in UI show up twice or not
 			if existing.Value != tile.Value {
-				return entity.Board{}, fmt.Errorf("duplicate tile with different value: %c", letter)
+				return nil, fmt.Errorf("duplicate tile with different value: %c", letter)
 			}
 			existing.Count += tile.Count
 			board.Tiles[letter] = existing
@@ -107,12 +107,12 @@ func (i *parser) ParseBoard(ctx context.Context, boardData string) (entity.Board
 		idx++
 	}
 	if tileCount < entity.BoardSize*entity.BoardSize {
-		return entity.Board{}, fmt.Errorf("incorrect number of tiles found: %d", len(board.Tiles))
+		return nil, fmt.Errorf("incorrect number of tiles found: %d", len(board.Tiles))
 	}
 
 	slog.Debug("parsed board")
 
-	return board, nil
+	return &board, nil
 }
 
 func parseBonusWord(line string) ([][]int, error) {

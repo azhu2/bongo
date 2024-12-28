@@ -20,7 +20,7 @@ var Module = fx.Module("scorer",
 )
 
 type Controller interface {
-	Score(context.Context, entity.Board, entity.Solution) (int, error)
+	Score(context.Context, *entity.Board, *entity.Solution) (int, error)
 }
 
 type Result struct {
@@ -37,7 +37,7 @@ func New() (Result, error) {
 	}, nil
 }
 
-func (s *scorer) Score(ctx context.Context, board entity.Board, solution entity.Solution) (int, error) {
+func (s *scorer) Score(ctx context.Context, board *entity.Board, solution *entity.Solution) (int, error) {
 	score := 0
 
 	for rowIdx, row := range solution.Board {
@@ -70,7 +70,7 @@ func (s *scorer) Score(ctx context.Context, board entity.Board, solution entity.
 	return score, nil
 }
 
-func scoreLetter(_ context.Context, board entity.Board, row, col int, letter rune) (int, error) {
+func scoreLetter(_ context.Context, board *entity.Board, row, col int, letter rune) (int, error) {
 	if letter == ' ' {
 		return 0, nil
 	}

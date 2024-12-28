@@ -13,7 +13,7 @@ var Module = fx.Module("solver",
 )
 
 type Controller interface {
-	Solve(context.Context, entity.Board) error
+	Solve(context.Context, *entity.Board) error
 }
 
 type Result struct {
@@ -30,6 +30,6 @@ func New() (Result, error) {
 	}, nil
 }
 
-func (s *solver) Solve(ctx context.Context, board entity.Board) error {
+func (s *solver) Solve(ctx context.Context, board *entity.Board) error {
 	return nil
 }
