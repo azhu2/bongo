@@ -20,7 +20,7 @@ var Module = fx.Module("scorer",
 )
 
 type Controller interface {
-	Score(context.Context, *entity.Board, *entity.Solution) (int, error)
+	Score(context.Context, *entity.Board, entity.Solution) (int, error)
 }
 
 type Result struct {
@@ -37,10 +37,10 @@ func New() (Result, error) {
 	}, nil
 }
 
-func (s *scorer) Score(ctx context.Context, board *entity.Board, solution *entity.Solution) (int, error) {
+func (s *scorer) Score(ctx context.Context, board *entity.Board, solution entity.Solution) (int, error) {
 	score := 0
 
-	for rowIdx, row := range solution.Board {
+	for rowIdx, row := range solution {
 		wordScore := 0
 		for colIdx, letter := range row {
 			letterScore, err := scoreLetter(ctx, board, rowIdx, colIdx, letter)
@@ -57,7 +57,7 @@ func (s *scorer) Score(ctx context.Context, board *entity.Board, solution *entit
 	for _, coords := range board.BonusWord {
 		rowIdx := coords[0]
 		colIdx := coords[1]
-		letter := solution.Board[rowIdx][colIdx]
+		letter := solution[rowIdx][colIdx]
 		bonusLetters = append(bonusLetters, letter)
 		letterScore, err := scoreLetter(ctx, board, rowIdx, colIdx, letter)
 		if err != nil {

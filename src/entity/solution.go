@@ -1,5 +1,3 @@
 package entity
 
-type Solution struct {
-	Board [][]rune
-}
+type Solution = [][]rune

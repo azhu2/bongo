@@ -67,10 +67,10 @@ func (h *handler) Solve(ctx context.Context, date string) error {
 		return err
 	}
 
-	_, err = h.dagBuilder.BuildDAG(ctx, board.Tiles)
+	words, err := h.dagBuilder.BuildDAG(ctx, board.Tiles)
 	if err != nil {
 		return err
 	}
 
-	return h.solver.Solve(ctx, board)
+	return h.solver.Solve(ctx, board, words)
 }

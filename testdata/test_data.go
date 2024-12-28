@@ -6,7 +6,7 @@ import (
 
 type testCase struct {
 	Date     string
-	Board    entity.Board
+	Board    *entity.Board
 	Solution entity.Solution
 	Score    int
 }
@@ -14,7 +14,7 @@ type testCase struct {
 var TestData = []testCase{
 	{
 		Date: "2024-12-23",
-		Board: entity.Board{
+		Board: &entity.Board{
 			Tiles: map[rune]entity.Tile{
 				'W': entity.Tile{Value: 65, Count: 1},
 				'H': entity.Tile{Value: 40, Count: 1},
@@ -44,20 +44,18 @@ var TestData = []testCase{
 				[]int{3, 3},
 			},
 		},
-		Solution: entity.Solution{
-			Board: [][]rune{
-				[]rune("SWORN"),
-				[]rune("SHAME"),
-				[]rune("PLANE"),
-				[]rune("SEEPS"),
-				[]rune("REEDY"),
-			},
+		Solution: [][]rune{
+			[]rune("SWORN"),
+			[]rune("SHAME"),
+			[]rune("PLANE"),
+			[]rune("SEEPS"),
+			[]rune("REEDY"),
 		},
 		Score: 1265,
 	},
 	{
 		Date: "2024-12-24",
-		Board: entity.Board{
+		Board: &entity.Board{
 			Tiles: map[rune]entity.Tile{
 				'G': entity.Tile{Value: 45, Count: 2},
 				'P': entity.Tile{Value: 35, Count: 1},
@@ -87,14 +85,12 @@ var TestData = []testCase{
 				[]int{3, 1},
 			},
 		},
-		Solution: entity.Solution{
-			Board: [][]rune{
-				[]rune("OCTAL"),
-				[]rune("CHAAT"),
-				[]rune("CIGAR"),
-				[]rune(" PONY"),
-				[]rune(" SING"),
-			},
+		Solution: [][]rune{
+			[]rune("OCTAL"),
+			[]rune("CHAAT"),
+			[]rune("CIGAR"),
+			[]rune(" PONY"),
+			[]rune(" SING"),
 		},
 		Score: 976,
 	},
