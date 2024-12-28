@@ -10,6 +10,7 @@ import (
 	"github.com/azhu2/bongo/src/config/secrets"
 	"github.com/azhu2/bongo/src/controller/dag"
 	"github.com/azhu2/bongo/src/controller/parser"
+	"github.com/azhu2/bongo/src/controller/scorer"
 	"github.com/azhu2/bongo/src/controller/solver"
 	"github.com/azhu2/bongo/src/gateway/gameimporter"
 	"github.com/azhu2/bongo/src/handler"
@@ -24,6 +25,7 @@ func main() {
 		handler.Module,
 		gameimporter.GraphqlModule,
 		parser.Module,
+		scorer.Module,
 		secrets.Module,
 		solver.Module,
 		fx.Supply(
