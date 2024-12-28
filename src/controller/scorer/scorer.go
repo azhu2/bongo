@@ -2,7 +2,7 @@ package scorer
 
 import (
 	"context"
-	"fmt"
+	"errors"
 	"math"
 	"strings"
 
@@ -13,6 +13,7 @@ import (
 
 const (
 	commonMultiplier = 1.3
+	maxWildcards     = 1
 )
 
 var Module = fx.Module("scorer",
@@ -39,13 +40,19 @@ func New() (Result, error) {
 
 func (s *scorer) Score(ctx context.Context, board *entity.Board, solution entity.Solution) (int, error) {
 	score := 0
+	wildcardCount := 0
 
 	for rowIdx, row := range solution {
 		wordScore := 0
 		for colIdx, letter := range row {
 			letterScore, err := scoreLetter(ctx, board, rowIdx, colIdx, letter)
 			if err != nil {
-				return 0, err
+				if errors.Is(err, invalidLetterError{}) {
+					wildcardCount++
+				}
+				if wildcardCount > maxWildcards {
+					return 0, err
+				}
 			}
 			wordScore += letterScore
 		}
@@ -76,7 +83,7 @@ func scoreLetter(_ context.Context, board *entity.Board, row, col int, letter ru
 	}
 	tile, ok := board.Tiles[letter]
 	if !ok {
-		return 0, fmt.Errorf("solution has invalid letter: %c", letter)
+		return 0, invalidLetterError{letter: letter}
 	}
 	return board.Multipliers[row][col] * tile.Value, nil
 }
