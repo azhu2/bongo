@@ -2,6 +2,7 @@ package wordlistimporter
 
 import (
 	"context"
+	"fmt"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -12,10 +13,9 @@ import (
 	"go.uber.org/fx"
 )
 
-// Temporary word list from https://www.wordfrequency.info/ until Puzzmo wordlist usage clarified
-const path = "../../../../testdata/word_list.txt"
+const path = "../../../../wordlist/wordlist-20210729.txt"
 
-var wordRegex = regexp.MustCompile(`^\w{1,5}$`)
+var wordRegex = regexp.MustCompile(`^\"\w{1,5}\"$`)
 
 var Module = fx.Module("wordimporter",
 	fx.Provide(New),
@@ -48,7 +48,9 @@ func (g *gateway) ImportWordList(ctx context.Context) ([]string, error) {
 		return nil, err
 	}
 	rows := strings.Split(strings.ToUpper(string(raw)), "\n")
-	return slices.DeleteFunc(rows,
+	filtered := slices.DeleteFunc(rows,
 		func(word string) bool { return !wordRegex.MatchString(word) },
-	), nil
+	)
+	fmt.Printf("found %d words from %s\n", len(filtered), path)
+	return filtered, nil
 }
