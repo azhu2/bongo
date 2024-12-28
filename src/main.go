@@ -2,7 +2,7 @@ package main
 
 import (
 	"context"
-	"fmt"
+	"log/slog"
 
 	"github.com/machinebox/graphql"
 	"go.uber.org/fx"
@@ -18,6 +18,7 @@ import (
 const date = "2024-12-25"
 
 func main() {
+	slog.SetLogLoggerLevel(slog.LevelDebug)
 	fx.New(
 		dag.Module,
 		handler.Module,
@@ -32,7 +33,9 @@ func main() {
 			lifecycle.Append(fx.StartHook(func(ctx context.Context) {
 				err := handler.Solve(ctx, date)
 				if err != nil {
-					fmt.Println(err)
+					slog.Error("error in solver",
+						"err", err,
+					)
 				}
 				shutdowner.Shutdown()
 			}))

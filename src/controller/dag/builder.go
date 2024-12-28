@@ -3,6 +3,7 @@ package dag
 import (
 	"context"
 	"fmt"
+	"log/slog"
 
 	"go.uber.org/fx"
 
@@ -93,6 +94,8 @@ func (c *controller) BuildDAG(ctx context.Context, tiles map[rune]entity.Tile) (
 			root.MaxValue = child.MaxValue
 		}
 	}
+
+	slog.Debug("processed words into DAG")
 
 	return &root, nil
 }

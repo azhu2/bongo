@@ -3,6 +3,7 @@ package parser
 import (
 	"context"
 	"fmt"
+	"log/slog"
 	"regexp"
 	"strconv"
 	"strings"
@@ -108,6 +109,8 @@ func (i *parser) ParseBoard(ctx context.Context, boardData string) (entity.Board
 	if tileCount < entity.BoardSize*entity.BoardSize {
 		return entity.Board{}, fmt.Errorf("incorrect number of tiles found: %d", len(board.Tiles))
 	}
+
+	slog.Debug("parsed board")
 
 	return board, nil
 }

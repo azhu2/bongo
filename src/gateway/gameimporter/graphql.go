@@ -3,6 +3,7 @@ package gameimporter
 import (
 	"context"
 	"fmt"
+	"log/slog"
 
 	"github.com/machinebox/graphql"
 	"go.uber.org/fx"
@@ -74,6 +75,11 @@ func (g *graphqlGateway) ImportBoard(ctx context.Context, date string) (string, 
 	if err != nil || len(board) == 0 {
 		return "", fmt.Errorf("unable to fetch Bongo board from Puzzmo %w", err)
 	}
+
+	slog.Debug("loaded game board",
+		"source", "graphql",
+		"date", date,
+	)
 
 	return board, err
 }

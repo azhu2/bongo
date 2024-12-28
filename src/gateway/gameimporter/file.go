@@ -3,6 +3,7 @@ package gameimporter
 import (
 	"context"
 	"fmt"
+	"log/slog"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -33,5 +34,9 @@ func (f *fileImporter) ImportBoard(ctx context.Context, date string) (string, er
 	if err != nil {
 		return "", err
 	}
+	slog.Debug("loaded game board",
+		"source", "file",
+		"path", path,
+	)
 	return string(raw), nil
 }

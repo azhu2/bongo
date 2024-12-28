@@ -2,7 +2,7 @@ package wordlistimporter
 
 import (
 	"context"
-	"fmt"
+	"log/slog"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -51,6 +51,9 @@ func (g *gateway) ImportWordList(ctx context.Context) ([]string, error) {
 	filtered := slices.DeleteFunc(rows,
 		func(word string) bool { return !wordRegex.MatchString(word) },
 	)
-	fmt.Printf("found %d words from %s\n", len(filtered), path)
+	slog.Debug("loaded word list",
+		"path", path,
+		"word_count", len(filtered),
+	)
 	return filtered, nil
 }
