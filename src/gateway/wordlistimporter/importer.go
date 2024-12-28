@@ -7,7 +7,6 @@ import (
 	"path/filepath"
 	"regexp"
 	"runtime"
-	"slices"
 	"strings"
 
 	"go.uber.org/fx"
@@ -15,7 +14,7 @@ import (
 
 const path = "../../../../wordlist/wordlist-20210729.txt"
 
-var wordRegex = regexp.MustCompile(`^\"\w{1,5}\"$`)
+var wordRegex = regexp.MustCompile(`^\"(\w{1,5})\"$`)
 
 var Module = fx.Module("wordimporter",
 	fx.Provide(New),
@@ -48,9 +47,12 @@ func (g *gateway) ImportWordList(ctx context.Context) ([]string, error) {
 		return nil, err
 	}
 	rows := strings.Split(strings.ToUpper(string(raw)), "\n")
-	filtered := slices.DeleteFunc(rows,
-		func(word string) bool { return !wordRegex.MatchString(word) },
-	)
+	filtered := []string{}
+	for _, word := range rows {
+		if match := wordRegex.FindStringSubmatch(word); len(match) > 0 {
+			filtered = append(filtered, match[1])
+		}
+	}
 	slog.Debug("loaded word list",
 		"path", path,
 		"word_count", len(filtered),
