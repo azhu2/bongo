@@ -1,3 +1,0 @@
-[submodule "wordlist"]
-	path = wordlist
-	url = git@github.com:wordnik/wordlist.git
