@@ -80,7 +80,7 @@ func (c *controller) BuildWordList(ctx context.Context) (*entity.WordList, error
 					mapEntry = map[rune][]*entity.DAGNode{}
 				}
 				mapEntry[letter] = append(mapEntry[letter], child)
-
+				nodeMap[i] = mapEntry
 			}
 			stack.Push(node)
 		}
