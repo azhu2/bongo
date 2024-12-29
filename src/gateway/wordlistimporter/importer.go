@@ -14,7 +14,11 @@ import (
 
 const path = "../../../../wordlist/wordlist-20210729.txt"
 
+<<<<<<< HEAD
 var wordRegex = regexp.MustCompile(`^\"(\w{1,5})\"$`)
+=======
+var wordRegex = regexp.MustCompile(`^(\w{3,5})$`)
+>>>>>>> ad9ae6d (One more try to handle wildcards in bonus words)
 
 var Module = fx.Module("wordimporter",
 	fx.Provide(New),
