@@ -160,11 +160,11 @@ func (s *solver) evaluateRow(ctx context.Context, board *entity.Board, partial p
 	for !rowCandidates.IsEmpty() {
 		cur := rowCandidates.Pop()
 		for nextLetter, childNode := range cur.node.Children {
-			isLetterAvailable := partial.availableLetters[nextLetter] > 0
-			if !isLetterAvailable && partial.wildcardCount >= 0 /*entity.MaxWildcards*/ {
+			isLetterAvailable := cur.availableLetters[nextLetter] > 0
+			if !isLetterAvailable && cur.wildcardCount >= 0 /*entity.MaxWildcards*/ {
 				continue
 			}
-			remainingLetters := maps.Clone(partial.availableLetters)
+			remainingLetters := maps.Clone(cur.availableLetters)
 			wildcardCount := cur.wildcardCount
 			if isLetterAvailable {
 				remainingLetters[nextLetter]--
