@@ -93,8 +93,7 @@ func (s *scorer) Score(ctx context.Context, board *entity.Board, solution entity
 		colIdx := coords[1]
 		letter := solution.Get(rowIdx, colIdx)
 		bonusLetters[i] = letter
-		shouldSkipAvailabilityCheck := bonusRowsCounted[rowIdx]
-		letterScore, err := scoreLetter(ctx, board, availableLetters, rowIdx, colIdx, letter, shouldSkipAvailabilityCheck)
+		letterScore, err := scoreLetter(ctx, board, availableLetters, rowIdx, colIdx, letter, true)
 		if err != nil {
 			if !errors.Is(err, InvalidLetterError{}) {
 				return 0, err

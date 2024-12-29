@@ -6,6 +6,7 @@ import (
 	"log/slog"
 	"maps"
 	"slices"
+	"strings"
 
 	"go.uber.org/fx"
 
@@ -102,11 +103,16 @@ func (s *solver) generateBonusCandidates(ctx context.Context, board *entity.Boar
 			candidate := entity.EmptySolution()
 			// Assume no wildcards - make it easier on scorer too
 			letters := map[rune]int{}
+			isWildCard := false
 			for _, letter := range cur.Fragment {
 				letters[letter]++
 				if letters[letter] > board.Tiles[letter].Count {
-					continue
+					isWildCard = true
+					break
 				}
+			}
+			if isWildCard {
+				continue
 			}
 			for i, b := range board.BonusWord {
 				candidate.Set(b[0], b[1], cur.Fragment[i])
@@ -144,7 +150,10 @@ func (s *solver) generateBonusCandidates(ctx context.Context, board *entity.Boar
 		}
 	}
 
-	slog.Debug("generated bonus word candidates", "count", len(bonusBoards), "best", bonusBoards[0])
+	slog.Debug("generated bonus word candidates",
+		"count", len(bonusBoards),
+		"best", strings.ReplaceAll(strings.ReplaceAll(string(bonusBoards[0]), "|", ""), " ", ""),
+	)
 	return bonusBoards
 }
 
