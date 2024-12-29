@@ -100,6 +100,14 @@ func (s *solver) generateBonusCandidates(ctx context.Context, board *entity.Boar
 		// Assume all bonus word letters must be filled (not true - it sometimes can have a wildcard)
 		if cur.IsWord && len(cur.Fragment) == len(board.BonusWord) {
 			candidate := entity.EmptySolution()
+			// Assume no wildcards - make it easier on scorer too
+			letters := map[rune]int{}
+			for _, letter := range cur.Fragment {
+				letters[letter]++
+				if letters[letter] > board.Tiles[letter].Count {
+					continue
+				}
+			}
 			for i, b := range board.BonusWord {
 				candidate.Set(b[0], b[1], cur.Fragment[i])
 			}
