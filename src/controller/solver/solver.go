@@ -144,7 +144,7 @@ func (s *solver) generateBonusCandidates(ctx context.Context, board *entity.Boar
 		}
 	}
 
-	slog.Debug("generated bonus word candidates", "count", len(bonusBoards))
+	slog.Debug("generated bonus word candidates", "count", len(bonusBoards), "best", bonusBoards[0])
 	return bonusBoards
 }
 
