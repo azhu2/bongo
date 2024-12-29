@@ -14,7 +14,7 @@ import (
 
 const path = "../../../../words/bongo/commonWords.txt"
 
-var wordRegex = regexp.MustCompile(`^(\w{1,5})$`)
+var wordRegex = regexp.MustCompile(`^(\w{3,5})$`)
 
 var Module = fx.Module("wordimporter",
 	fx.Provide(New),
