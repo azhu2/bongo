@@ -72,12 +72,7 @@ func (h *handler) Solve(ctx context.Context, date string) (entity.Solution, int,
 		return nil, 0, err
 	}
 
-	words, err := h.dagBuilder.BuildDAG(ctx, board.Tiles)
-	if err != nil {
-		return nil, 0, err
-	}
-
-	solution, err := h.solver.Solve(ctx, board, words)
+	solution, err := h.solver.Solve(ctx, board)
 	if err != nil {
 		return nil, 0, err
 	}

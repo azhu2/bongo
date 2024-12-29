@@ -17,7 +17,7 @@ var Module = fx.Module("dagbuilder",
 )
 
 type Controller interface {
-	BuildDAG(ctx context.Context, tiles map[rune]entity.Tile) (*entity.WordListDAG, error)
+	BuildDAG(ctx context.Context) (*entity.WordListDAG, error)
 }
 
 type Params struct {
@@ -44,7 +44,7 @@ func New(p Params) (Result, error) {
 	}, nil
 }
 
-func (c *controller) BuildDAG(ctx context.Context, tiles map[rune]entity.Tile) (*entity.WordListDAG, error) {
+func (c *controller) BuildDAG(ctx context.Context) (*entity.WordListDAG, error) {
 	wordList, err := c.importer.ImportWordList(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("could not import word list %w", err)

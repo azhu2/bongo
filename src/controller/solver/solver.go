@@ -23,13 +23,14 @@ var Module = fx.Module("solver",
 )
 
 type Controller interface {
-	Solve(context.Context, *entity.Board, *entity.WordListDAG) (entity.Solution, error)
+	Solve(context.Context, *entity.Board) (entity.Solution, error)
 }
 
 type Params struct {
 	fx.In
 
-	Scorer scorer.Controller
+	Scorer   scorer.Controller
+	WordList *entity.WordListDAG
 }
 
 type Result struct {
@@ -39,18 +40,20 @@ type Result struct {
 }
 
 type solver struct {
-	scorer scorer.Controller
+	scorer   scorer.Controller
+	wordList *entity.WordListDAG
 }
 
 func New(p Params) (Result, error) {
 	return Result{
 		Controller: &solver{
-			scorer: p.Scorer,
+			scorer:   p.Scorer,
+			wordList: p.WordList,
 		},
 	}, nil
 }
 
-func (s *solver) Solve(ctx context.Context, board *entity.Board, words *entity.WordListDAG) (entity.Solution, error) {
+func (s *solver) Solve(ctx context.Context, board *entity.Board) (entity.Solution, error) {
 	// The DAG can't really work backwards with letters in the middle, so this is a problem...
 	// Ignore for now, but I'd really like to use it to narrow the solution space.
 	// Maybe make the DAG doubly-linked?
@@ -61,7 +64,7 @@ func (s *solver) Solve(ctx context.Context, board *entity.Board, words *entity.W
 		availableLetters[letter] = tile.Count
 	}
 	globalBest := 0
-	solution := s.evaluateRow(ctx, board, words, partialSolution{
+	solution := s.evaluateRow(ctx, board, partialSolution{
 		solution:         entity.EmptySolution(),
 		availableLetters: availableLetters,
 		wildcardCount:    0,
@@ -76,12 +79,12 @@ type bonusCandidate struct {
 	score    int
 }
 
-func (s *solver) generateBonusCandidates(ctx context.Context, board *entity.Board, words *entity.WordListDAG) []entity.Solution {
+func (s *solver) generateBonusCandidates(ctx context.Context, board *entity.Board) []entity.Solution {
 	candidates := []bonusCandidate{}
 
 	maxValue := 0
 	nodes := entity.Stack[*entity.WordListDAG]{}
-	nodes.Push(words)
+	nodes.Push(s.wordList)
 	for !nodes.IsEmpty() {
 		cur := nodes.Pop()
 		for _, child := range cur.Children {
@@ -139,7 +142,7 @@ type partialRow struct {
 	wildcardCount    int
 }
 
-func (s *solver) evaluateRow(ctx context.Context, board *entity.Board, words *entity.WordListDAG, partial partialSolution, globalBest *int) entity.Solution {
+func (s *solver) evaluateRow(ctx context.Context, board *entity.Board, partial partialSolution, globalBest *int) entity.Solution {
 	// Base case
 	if partial.rowsFilled == entity.BoardSize {
 		return partial.solution
@@ -150,7 +153,7 @@ func (s *solver) evaluateRow(ctx context.Context, board *entity.Board, words *en
 
 	rowCandidates := entity.Stack[partialRow]{}
 	rowCandidates.Push(partialRow{
-		node:             words,
+		node:             s.wordList,
 		availableLetters: partial.availableLetters,
 		wildcardCount:    partial.wildcardCount,
 	})
@@ -182,7 +185,7 @@ func (s *solver) evaluateRow(ctx context.Context, board *entity.Board, words *en
 			for _, letter := range cur.node.Fragment {
 				remainingLetters[letter]--
 			}
-			candidate := s.evaluateRow(ctx, board, words, partialSolution{
+			candidate := s.evaluateRow(ctx, board, partialSolution{
 				solution:         nextPartial,
 				availableLetters: remainingLetters,
 				wildcardCount:    cur.wildcardCount,

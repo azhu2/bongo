@@ -12,6 +12,7 @@ import (
 	"github.com/azhu2/bongo/src/controller/parser"
 	"github.com/azhu2/bongo/src/controller/scorer"
 	"github.com/azhu2/bongo/src/controller/solver"
+	"github.com/azhu2/bongo/src/entity"
 	"github.com/azhu2/bongo/src/gateway/gameimporter"
 	"github.com/azhu2/bongo/src/handler"
 )
@@ -31,6 +32,9 @@ func main() {
 		fx.Supply(
 			graphql.NewClient(gameimporter.GraphqlEndpoint),
 		),
+		fx.Provide(func(c dag.Controller) (*entity.WordListDAG, error) {
+			return c.BuildDAG(context.Background())
+		}),
 		fx.Invoke(func(lifecycle fx.Lifecycle, shutdowner fx.Shutdowner, handler handler.Handler) {
 			lifecycle.Append(fx.StartHook(func(ctx context.Context) {
 				solution, score, err := handler.Solve(ctx, date)
