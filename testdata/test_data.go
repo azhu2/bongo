@@ -44,13 +44,13 @@ var TestData = []testCase{
 				[]int{3, 3},
 			},
 		},
-		Solution: [][]rune{
-			[]rune("SWORN"),
-			[]rune("SHAME"),
-			[]rune("PLANE"),
-			[]rune("SEEPS"),
-			[]rune("REEDY"),
-		},
+		Solution: []rune(
+			"SWORN" +
+				"SHAME" +
+				"PLANE" +
+				"SEEPS" +
+				"REEDY",
+		),
 		Score: 1265,
 	},
 	{
@@ -85,13 +85,13 @@ var TestData = []testCase{
 				[]int{3, 1},
 			},
 		},
-		Solution: [][]rune{
-			[]rune("OCTAL"),
-			[]rune("CHAAT"),
-			[]rune("CIGAR"),
-			[]rune(" PONY"),
-			[]rune(" SING"),
-		},
+		Solution: []rune(
+			"OCTAL" +
+				"CHAAT" +
+				"CIGAR" +
+				" PONY" +
+				" SING",
+		),
 		Score: 976,
 	},
 }
