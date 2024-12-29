@@ -76,7 +76,7 @@ func (s *scorer) Score(ctx context.Context, board *entity.Board, solution entity
 		letter := solution.Get(rowIdx, colIdx)
 		bonusLetters = append(bonusLetters, letter)
 		letterScore, err := scoreLetter(ctx, board, rowIdx, colIdx, letter)
-		if err != nil {
+		if err != nil && !errors.Is(err, invalidLetterError{}) {
 			return 0, err
 		}
 		bonusScore += letterScore
