@@ -55,6 +55,7 @@ func New(p Params) (Result, error) {
 }
 
 func (s *solver) Solve(ctx context.Context, board *entity.Board) (entity.Solution, error) {
+	// Start by generating bonus words
 	candidates := s.generateBonusCandidates(ctx, board)
 
 	availableLetters := map[rune]int{}
@@ -64,6 +65,7 @@ func (s *solver) Solve(ctx context.Context, board *entity.Board) (entity.Solutio
 	globalBest := entity.EmptySolution()
 	globalBestScore := 0
 
+	// Then seed the recursive row-by-row solver with bonus words already set in grid
 	for _, candidate := range candidates {
 		remainingLetters := maps.Clone(availableLetters)
 		for _, letter := range candidate {
@@ -101,6 +103,7 @@ func (s *solver) generateBonusCandidates(ctx context.Context, board *entity.Boar
 		// Assume all bonus word letters must be filled (not true - it sometimes can have a wildcard)
 		if cur.IsWord && len(cur.Fragment) == len(board.BonusWord) {
 			candidate := entity.EmptySolution()
+
 			// Assume no wildcards - make it easier on scorer too
 			letters := map[rune]int{}
 			isWildCard := false
@@ -114,12 +117,12 @@ func (s *solver) generateBonusCandidates(ctx context.Context, board *entity.Boar
 			if isWildCard {
 				continue
 			}
+
 			for i, b := range board.BonusWord {
 				candidate.Set(b[0], b[1], cur.Fragment[i])
 			}
 			score, err := s.scorer.Score(ctx, board, candidate)
 			if err != nil {
-				// TODO Type this
 				if !errors.Is(err, scorer.InvalidLetterError{}) {
 					slog.Error("unable to score bonus word candidate; continuing",
 						"candidate", candidate,
@@ -141,7 +144,7 @@ func (s *solver) generateBonusCandidates(ctx context.Context, board *entity.Boar
 		return b.score - a.score
 	})
 
-	// Filter once more to avoid repeatedly rebalancing and trimming a tree
+	// Filter once at the end to avoid repeatedly rebalancing and trimming a tree
 	// Another option is a priority queue with a fixed size
 	bonusBoards := []entity.Solution{}
 	for _, candidate := range candidates {
@@ -187,13 +190,14 @@ func (s *solver) evaluateRow(ctx context.Context, board *entity.Board, partial p
 		}
 	}
 	if filledCol != -1 {
-		// Start with tiles already filled in this row
+		// If there are tiles already filled in this row, seed from node map in word list
 		filledLetter := partial.solution.Get(partial.curRow, filledCol)
 		filledCandidates := s.wordList.NodeMap[filledCol][filledLetter]
 		for _, candidate := range filledCandidates {
 			filledSolution := slices.Clone(partial.solution)
 			remainingLetters := maps.Clone(partial.availableLetters)
 			wildcardCount := partial.wildcardCount
+			// Backfill the earlier letters before this node
 			for col, letter := range candidate.Fragment {
 				if col == filledCol {
 					continue
@@ -222,9 +226,11 @@ func (s *solver) evaluateRow(ctx context.Context, board *entity.Board, partial p
 			wildcardCount:    partial.wildcardCount,
 		})
 	}
+
 	for !rowCandidates.IsEmpty() {
 		cur := rowCandidates.Pop()
 		for nextLetter, childNode := range cur.node.Children {
+			// Add valid children nodes
 			isLetterAvailable := cur.availableLetters[nextLetter] > 0
 			if !isLetterAvailable && cur.wildcardCount >= entity.MaxWildcards {
 				continue
@@ -242,14 +248,15 @@ func (s *solver) evaluateRow(ctx context.Context, board *entity.Board, partial p
 				wildcardCount:    wildcardCount,
 			})
 		}
-		// Start with assuming only 5-letter words to save on search space
+
+		// Assuming only 5-letter words to save on search space
 		if cur.node.IsWord && len(cur.node.Fragment) == entity.BoardSize {
 			nextPartial := slices.Clone(partial.solution)
 			nextPartial.SetRow(partial.curRow, cur.node.Fragment)
 			remainingLetters := maps.Clone(partial.availableLetters)
 			for j, letter := range cur.node.Fragment {
 				if partial.solution.Get(partial.curRow, j) != letter {
-					// Don't deduct if already set
+					// Don't deduct if already set (from partial)
 					if remainingLetters[letter] > 0 {
 						remainingLetters[letter]--
 					}

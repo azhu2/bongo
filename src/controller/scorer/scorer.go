@@ -58,6 +58,7 @@ func (s *scorer) Score(ctx context.Context, board *entity.Board, solution entity
 	// Avoid double-counting availability for bonus words
 	bonusRowsCounted := map[int]bool{}
 
+	// Count rows
 	for rowIdx, row := range solution.Rows() {
 		wordScore := 0
 		for colIdx, letter := range row {
@@ -77,7 +78,7 @@ func (s *scorer) Score(ctx context.Context, board *entity.Board, solution entity
 		if multiplier != 0 {
 			bonusRowsCounted[rowIdx] = true
 		} else {
-			// Return invalid word letters to availability pool
+			// Return letters to availability pool if word is invalid
 			for _, letter := range row {
 				if availableLetters[letter] > 0 {
 					availableLetters[letter]++
@@ -86,6 +87,7 @@ func (s *scorer) Score(ctx context.Context, board *entity.Board, solution entity
 		}
 	}
 
+	// Count bonus word
 	bonusLetters := make([]rune, len(board.BonusWord))
 	bonusScore := 0
 	for i, coords := range board.BonusWord {
