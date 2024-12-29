@@ -12,9 +12,9 @@ import (
 	"go.uber.org/fx"
 )
 
-const path = "../../../../wordlist/wordlist-20210729.txt"
+const path = "../../../../words/bongo/commonWords.txt"
 
-var wordRegex = regexp.MustCompile(`^\"(\w{1,5})\"$`)
+var wordRegex = regexp.MustCompile(`^(\w{1,5})$`)
 
 var Module = fx.Module("wordimporter",
 	fx.Provide(New),
