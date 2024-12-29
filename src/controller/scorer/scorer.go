@@ -51,10 +51,15 @@ func (s *scorer) Score(ctx context.Context, board *entity.Board, solution entity
 	score := 0
 	wildcardCount := 0
 
+	availableLetters := map[rune]int{}
+	for letter, tile := range board.Tiles {
+		availableLetters[letter] = tile.Count
+	}
+
 	for rowIdx, row := range solution.Rows() {
 		wordScore := 0
 		for colIdx, letter := range row {
-			letterScore, err := scoreLetter(ctx, board, rowIdx, colIdx, letter)
+			letterScore, err := scoreLetter(ctx, board, availableLetters, rowIdx, colIdx, letter)
 			if err != nil {
 				if errors.Is(err, InvalidLetterError{}) {
 					wildcardCount++
@@ -75,7 +80,7 @@ func (s *scorer) Score(ctx context.Context, board *entity.Board, solution entity
 		colIdx := coords[1]
 		letter := solution.Get(rowIdx, colIdx)
 		bonusLetters = append(bonusLetters, letter)
-		letterScore, err := scoreLetter(ctx, board, rowIdx, colIdx, letter)
+		letterScore, err := scoreLetter(ctx, board, availableLetters, rowIdx, colIdx, letter)
 		if err != nil && !errors.Is(err, InvalidLetterError{}) {
 			return 0, err
 		}
@@ -86,14 +91,15 @@ func (s *scorer) Score(ctx context.Context, board *entity.Board, solution entity
 	return score, nil
 }
 
-func scoreLetter(_ context.Context, board *entity.Board, row, col int, letter rune) (int, error) {
+func scoreLetter(_ context.Context, board *entity.Board, availableLetters map[rune]int, row, col int, letter rune) (int, error) {
 	if letter == ' ' {
 		return 0, nil
 	}
 	tile, ok := board.Tiles[letter]
-	if !ok {
+	if !ok || availableLetters[letter] < 1 {
 		return 0, InvalidLetterError{letter: letter}
 	}
+	availableLetters[letter]--
 	return board.Multipliers[row][col] * tile.Value, nil
 }
 

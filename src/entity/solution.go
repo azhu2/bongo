@@ -6,6 +6,10 @@ func (s Solution) Get(i, j int) rune {
 	return s[i*BoardSize+j]
 }
 
+func (s Solution) GetRow(i int) []rune {
+	return s[i*BoardSize : (i+1)*BoardSize]
+}
+
 func (s Solution) Set(i, j int, letter rune) {
 	s[i*BoardSize+j] = letter
 }

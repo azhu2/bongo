@@ -74,7 +74,7 @@ func (s *solver) Solve(ctx context.Context, board *entity.Board) (entity.Solutio
 			solution:         candidate,
 			availableLetters: remainingLetters,
 			wildcardCount:    0,
-			rowsFilled:       0,
+			curRow:           0,
 		}, &globalBest, &globalBestScore)
 	}
 
@@ -144,7 +144,7 @@ type partialSolution struct {
 	solution         entity.Solution
 	availableLetters map[rune]int
 	wildcardCount    int
-	rowsFilled       int
+	curRow           int
 }
 
 type partialRow struct {
@@ -155,7 +155,7 @@ type partialRow struct {
 
 func (s *solver) evaluateRow(ctx context.Context, board *entity.Board, partial partialSolution, globalBest *entity.Solution, globalBestScore *int) entity.Solution {
 	// Base case
-	if partial.rowsFilled == entity.BoardSize {
+	if partial.curRow == entity.BoardSize {
 		return partial.solution
 	}
 
@@ -163,11 +163,48 @@ func (s *solver) evaluateRow(ctx context.Context, board *entity.Board, partial p
 	bestScore := 0
 
 	rowCandidates := entity.Stack[partialRow]{}
-	rowCandidates.Push(partialRow{
-		node:             s.wordList.Root,
-		availableLetters: partial.availableLetters,
-		wildcardCount:    partial.wildcardCount,
-	})
+	filledCol := -1
+	for col, letter := range partial.solution.GetRow(partial.curRow) {
+		if letter != ' ' {
+			filledCol = col
+		}
+	}
+	if filledCol != -1 {
+		// Start with tiles already filled in this row
+		filledLetter := partial.solution.Get(partial.curRow, filledCol)
+		filledCandidates := s.wordList.NodeMap[filledCol][filledLetter]
+		for _, candidate := range filledCandidates {
+			filledSolution := slices.Clone(partial.solution)
+			remainingLetters := maps.Clone(partial.availableLetters)
+			wildcardCount := partial.wildcardCount
+			for col, letter := range candidate.Fragment {
+				if col == filledCol {
+					continue
+				}
+				filledSolution.Set(partial.curRow, col, letter)
+				if remainingLetters[letter] > 0 {
+					remainingLetters[letter]--
+				} else {
+					wildcardCount++
+				}
+			}
+			if wildcardCount > entity.MaxWildcards {
+				continue
+			}
+			rowCandidates.Push(partialRow{
+				node:             candidate,
+				availableLetters: remainingLetters,
+				wildcardCount:    wildcardCount,
+			})
+		}
+	} else {
+		// Start with blank row and root of word list
+		rowCandidates.Push(partialRow{
+			node:             s.wordList.Root,
+			availableLetters: partial.availableLetters,
+			wildcardCount:    partial.wildcardCount,
+		})
+	}
 	for !rowCandidates.IsEmpty() {
 		cur := rowCandidates.Pop()
 		for nextLetter, childNode := range cur.node.Children {
@@ -191,16 +228,21 @@ func (s *solver) evaluateRow(ctx context.Context, board *entity.Board, partial p
 		// Start with assuming only 5-letter words to save on search space
 		if cur.node.IsWord && len(cur.node.Fragment) == entity.BoardSize {
 			nextPartial := slices.Clone(partial.solution)
-			nextPartial.SetRow(partial.rowsFilled, cur.node.Fragment)
+			nextPartial.SetRow(partial.curRow, cur.node.Fragment)
 			remainingLetters := maps.Clone(partial.availableLetters)
-			for _, letter := range cur.node.Fragment {
-				remainingLetters[letter]--
+			for j, letter := range cur.node.Fragment {
+				if partial.solution.Get(partial.curRow, j) != letter {
+					// Don't deduct if already set
+					if remainingLetters[letter] > 0 {
+						remainingLetters[letter]--
+					}
+				}
 			}
 			candidate := s.evaluateRow(ctx, board, partialSolution{
 				solution:         nextPartial,
 				availableLetters: remainingLetters,
 				wildcardCount:    cur.wildcardCount,
-				rowsFilled:       partial.rowsFilled + 1,
+				curRow:           partial.curRow + 1,
 			}, globalBest, globalBestScore)
 			score, err := s.scorer.Score(ctx, board, candidate)
 			if err != nil {

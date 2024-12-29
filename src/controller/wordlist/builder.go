@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log/slog"
+	"slices"
 
 	"go.uber.org/fx"
 
@@ -66,20 +67,20 @@ func (c *controller) BuildWordList(ctx context.Context) (*entity.WordList, error
 				node = child
 			} else {
 				// Create new child node
-				child := &entity.DAGNode{
-					Fragment: append(node.Fragment, letter),
+				child := entity.DAGNode{
+					Fragment: append(slices.Clone(node.Fragment), letter),
 					Children: make(map[rune]*entity.DAGNode),
 					Prev:     node,
 				}
-				node.Children[letter] = child
-				node = child
+				node.Children[letter] = &child
+				node = &child
 
 				// Add to node map
 				var mapEntry map[rune][]*entity.DAGNode
 				if mapEntry = nodeMap[i]; mapEntry == nil {
 					mapEntry = map[rune][]*entity.DAGNode{}
 				}
-				mapEntry[letter] = append(mapEntry[letter], child)
+				mapEntry[letter] = append(mapEntry[letter], &child)
 				nodeMap[i] = mapEntry
 			}
 			stack.Push(node)
