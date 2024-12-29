@@ -23,17 +23,27 @@ type Controller interface {
 	Score(context.Context, *entity.Board, entity.Solution) (int, error)
 }
 
+type Params struct {
+	fx.In
+
+	WordList *entity.WordListDAG
+}
+
 type Result struct {
 	fx.Out
 
 	Controller
 }
 
-type scorer struct{}
+type scorer struct {
+	wordList *entity.WordListDAG
+}
 
-func New() (Result, error) {
+func New(p Params) (Result, error) {
 	return Result{
-		Controller: &scorer{},
+		Controller: &scorer{
+			wordList: p.WordList,
+		},
 	}, nil
 }
 
@@ -99,8 +109,15 @@ func (s *scorer) wordMultiplier(ctx context.Context, word string) float64 {
 	return 1
 }
 
-func (s *scorer) isWord(_ context.Context, _ string) bool {
-	// TODO Implement
+func (s *scorer) isWord(_ context.Context, word string) bool {
+	node := s.wordList
+	for _, letter := range word {
+		if child := node.Children[letter]; child != nil {
+			node = child
+			continue
+		}
+		return false
+	}
 	return true
 }
 
