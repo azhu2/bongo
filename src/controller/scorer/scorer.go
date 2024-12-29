@@ -76,6 +76,13 @@ func (s *scorer) Score(ctx context.Context, board *entity.Board, solution entity
 		score += (int)(math.Ceil(multiplier * float64(wordScore)))
 		if multiplier != 0 {
 			bonusRowsCounted[rowIdx] = true
+		} else {
+			// Return invalid word letters to availability pool
+			for _, letter := range row {
+				if availableLetters[letter] > 0 {
+					availableLetters[letter]++
+				}
+			}
 		}
 	}
 
@@ -86,9 +93,14 @@ func (s *scorer) Score(ctx context.Context, board *entity.Board, solution entity
 		colIdx := coords[1]
 		letter := solution.Get(rowIdx, colIdx)
 		bonusLetters[i] = letter
-		letterScore, err := scoreLetter(ctx, board, availableLetters, rowIdx, colIdx, letter, bonusRowsCounted[rowIdx])
-		if err != nil && !errors.Is(err, InvalidLetterError{}) {
-			return 0, err
+		shouldSkipAvailabilityCheck := bonusRowsCounted[rowIdx]
+		letterScore, err := scoreLetter(ctx, board, availableLetters, rowIdx, colIdx, letter, shouldSkipAvailabilityCheck)
+		if err != nil {
+			if !errors.Is(err, InvalidLetterError{}) {
+				return 0, err
+			} else {
+				continue
+			}
 		}
 		bonusScore += letterScore
 	}
@@ -130,7 +142,7 @@ func (s *scorer) isWord(_ context.Context, word string) bool {
 		}
 		return false
 	}
-	return true
+	return node.IsWord
 }
 
 func (s *scorer) isCommon(_ context.Context, _ string) bool {
