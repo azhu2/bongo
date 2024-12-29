@@ -70,7 +70,6 @@ func (c *controller) BuildWordList(ctx context.Context) (*entity.WordList, error
 				child := entity.DAGNode{
 					Fragment: append(slices.Clone(node.Fragment), letter),
 					Children: make(map[rune]*entity.DAGNode),
-					Prev:     node,
 				}
 				node.Children[letter] = &child
 				node = &child
