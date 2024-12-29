@@ -161,7 +161,7 @@ func (s *solver) evaluateRow(ctx context.Context, board *entity.Board, partial p
 		cur := rowCandidates.Pop()
 		for nextLetter, childNode := range cur.node.Children {
 			isLetterAvailable := cur.availableLetters[nextLetter] > 0
-			if !isLetterAvailable && cur.wildcardCount >= 0 /*entity.MaxWildcards*/ {
+			if !isLetterAvailable && cur.wildcardCount >= entity.MaxWildcards {
 				continue
 			}
 			remainingLetters := maps.Clone(cur.availableLetters)
