@@ -1,6 +1,6 @@
 package entity
 
-type Solution = [][]rune
+type Solution [][]rune
 
 func EmptySolution() Solution {
 	empty := make([][]rune, BoardSize)
@@ -12,4 +12,12 @@ func EmptySolution() Solution {
 		empty[i] = row
 	}
 	return empty
+}
+
+func (s Solution) String() string {
+	ret := ""
+	for _, row := range s {
+		ret += string(row) + "|"
+	}
+	return ret
 }
