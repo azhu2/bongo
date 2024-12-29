@@ -54,18 +54,19 @@ func (s *solver) Solve(ctx context.Context, board *entity.Board, words *entity.W
 	// The DAG can't really work backwards with letters in the middle, so this is a problem...
 	// Ignore for now, but I'd really like to use it to narrow the solution space.
 	// Maybe make the DAG doubly-linked?
-	s.generateBonusCandidates(ctx, board, words)
+	// s.generateBonusCandidates(ctx, board, words)
 
 	availableLetters := map[rune]int{}
 	for letter, tile := range board.Tiles {
 		availableLetters[letter] = tile.Count
 	}
+	globalBest := 0
 	solution := s.evaluateRow(ctx, board, words, partialSolution{
 		solution:         entity.EmptySolution(),
 		availableLetters: availableLetters,
 		wildcardCount:    0,
 		rowsFilled:       0,
-	})
+	}, &globalBest)
 
 	return solution, nil
 }
@@ -133,13 +134,12 @@ type partialSolution struct {
 }
 
 type partialRow struct {
-	row              []rune
 	node             *entity.WordListDAG
 	availableLetters map[rune]int
 	wildcardCount    int
 }
 
-func (s *solver) evaluateRow(ctx context.Context, board *entity.Board, words *entity.WordListDAG, partial partialSolution) entity.Solution {
+func (s *solver) evaluateRow(ctx context.Context, board *entity.Board, words *entity.WordListDAG, partial partialSolution, globalBest *int) entity.Solution {
 	// Base case
 	if partial.rowsFilled == entity.BoardSize {
 		return partial.solution
@@ -148,39 +148,38 @@ func (s *solver) evaluateRow(ctx context.Context, board *entity.Board, words *en
 	best := partial.solution
 	bestScore := 0
 
-	nodes := entity.Stack[partialRow]{}
-	nodes.Push(partialRow{
+	rowCandidates := entity.Stack[partialRow]{}
+	rowCandidates.Push(partialRow{
 		node:             words,
 		availableLetters: partial.availableLetters,
 		wildcardCount:    partial.wildcardCount,
 	})
-	for !nodes.IsEmpty() {
-		cur := nodes.Pop()
+	for !rowCandidates.IsEmpty() {
+		cur := rowCandidates.Pop()
 		for nextLetter, childNode := range cur.node.Children {
 			isLetterAvailable := partial.availableLetters[nextLetter] > 0
-			if !isLetterAvailable && partial.wildcardCount >= entity.MaxWildcards {
+			if !isLetterAvailable && partial.wildcardCount >= 0 /*entity.MaxWildcards*/ {
 				continue
 			}
-			letters := maps.Clone(partial.availableLetters)
+			remainingLetters := maps.Clone(partial.availableLetters)
 			wildcardCount := cur.wildcardCount
 			if isLetterAvailable {
-				letters[nextLetter]--
+				remainingLetters[nextLetter]--
 			} else {
 				wildcardCount++
 			}
-			nodes.Push(partialRow{
-				row:              append(cur.row, nextLetter),
+			rowCandidates.Push(partialRow{
 				node:             childNode,
-				availableLetters: letters,
+				availableLetters: remainingLetters,
 				wildcardCount:    wildcardCount,
 			})
 		}
 		// Start with assuming only 5-letter words to save on search space
-		if cur.node.IsWord && len(cur.row) == entity.BoardSize {
+		if cur.node.IsWord && len(cur.node.Fragment) == entity.BoardSize {
 			nextPartial := slices.Clone(partial.solution)
-			nextPartial.SetRow(partial.rowsFilled, cur.row)
+			nextPartial.SetRow(partial.rowsFilled, cur.node.Fragment)
 			remainingLetters := maps.Clone(partial.availableLetters)
-			for _, letter := range cur.row {
+			for _, letter := range cur.node.Fragment {
 				remainingLetters[letter]--
 			}
 			candidate := s.evaluateRow(ctx, board, words, partialSolution{
@@ -188,7 +187,7 @@ func (s *solver) evaluateRow(ctx context.Context, board *entity.Board, words *en
 				availableLetters: remainingLetters,
 				wildcardCount:    cur.wildcardCount,
 				rowsFilled:       partial.rowsFilled + 1,
-			})
+			}, globalBest)
 			score, err := s.scorer.Score(ctx, board, candidate)
 			if err != nil {
 				// swallow error and continue
@@ -197,8 +196,11 @@ func (s *solver) evaluateRow(ctx context.Context, board *entity.Board, words *en
 			}
 			if score > bestScore {
 				best = candidate
-				score = bestScore
-				slog.Debug("new candidate board", "board", candidate, "score", score)
+				bestScore = score
+				if score > *globalBest {
+					slog.Debug("new best board", "board", candidate, "score", score)
+					*globalBest = score
+				}
 			}
 		}
 	}
