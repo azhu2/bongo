@@ -42,7 +42,7 @@ func (s *scorer) Score(ctx context.Context, board *entity.Board, solution entity
 	score := 0
 	wildcardCount := 0
 
-	for rowIdx, row := range solution {
+	for rowIdx, row := range solution.Rows() {
 		wordScore := 0
 		for colIdx, letter := range row {
 			letterScore, err := scoreLetter(ctx, board, rowIdx, colIdx, letter)
@@ -64,7 +64,7 @@ func (s *scorer) Score(ctx context.Context, board *entity.Board, solution entity
 	for _, coords := range board.BonusWord {
 		rowIdx := coords[0]
 		colIdx := coords[1]
-		letter := solution[rowIdx][colIdx]
+		letter := solution.Get(rowIdx, colIdx)
 		bonusLetters = append(bonusLetters, letter)
 		letterScore, err := scoreLetter(ctx, board, rowIdx, colIdx, letter)
 		if err != nil {

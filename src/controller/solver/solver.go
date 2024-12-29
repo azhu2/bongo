@@ -74,7 +74,7 @@ func (s *solver) generateBonusCandidates(ctx context.Context, board *entity.Boar
 		if cur.IsWord && len(cur.Fragment) == len(board.BonusWord) {
 			candidate := entity.EmptySolution()
 			for i, b := range board.BonusWord {
-				candidate[b[0]][b[1]] = cur.Fragment[i]
+				candidate.Set(b[0], b[1], cur.Fragment[i])
 			}
 			score, err := s.scorer.Score(ctx, board, candidate)
 			if err != nil {
