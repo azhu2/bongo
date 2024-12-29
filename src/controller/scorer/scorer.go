@@ -55,14 +55,19 @@ func (s *scorer) Score(ctx context.Context, board *entity.Board, solution entity
 	for letter, tile := range board.Tiles {
 		availableLetters[letter] = tile.Count
 	}
-	// Avoid double-counting availability for bonus words
-	bonusRowsCounted := map[int]bool{}
+	letterValues := make([][]int, entity.BoardSize)
+	for i := 0; i < entity.BoardSize; i++ {
+		letterValues[i] = make([]int, entity.BoardSize)
+		for j := 0; j < entity.BoardSize; j++ {
+			letterValues[i][j] = -1
+		}
+	}
 
 	// Count rows
 	for rowIdx, row := range solution.Rows() {
 		wordScore := 0
 		for colIdx, letter := range row {
-			letterScore, err := scoreLetter(ctx, board, availableLetters, rowIdx, colIdx, letter, false)
+			letterScore, err := scoreLetter(ctx, board, availableLetters, rowIdx, colIdx, letter)
 			if err != nil {
 				if errors.Is(err, InvalidLetterError{}) {
 					wildcardCount++
@@ -70,14 +75,14 @@ func (s *scorer) Score(ctx context.Context, board *entity.Board, solution entity
 				if wildcardCount > entity.MaxWildcards {
 					return 0, err
 				}
+			} else {
+				letterValues[rowIdx][colIdx] = letterScore
 			}
 			wordScore += letterScore
 		}
 		multiplier := s.wordMultiplier(ctx, string(row))
 		score += (int)(math.Ceil(multiplier * float64(wordScore)))
-		if multiplier != 0 {
-			bonusRowsCounted[rowIdx] = true
-		} else {
+		if multiplier == 0 {
 			// Return letters to availability pool if word is invalid
 			for _, letter := range row {
 				if availableLetters[letter] > 0 {
@@ -95,15 +100,7 @@ func (s *scorer) Score(ctx context.Context, board *entity.Board, solution entity
 		colIdx := coords[1]
 		letter := solution.Get(rowIdx, colIdx)
 		bonusLetters[i] = letter
-		shouldSkipAvailabilityCheck := bonusRowsCounted[rowIdx]
-		letterScore, err := scoreLetter(ctx, board, availableLetters, rowIdx, colIdx, letter, shouldSkipAvailabilityCheck)
-		if err != nil {
-			if !errors.Is(err, InvalidLetterError{}) {
-				return 0, err
-			} else {
-				continue
-			}
-		}
+		letterScore := letterValues[rowIdx][colIdx]
 		bonusScore += letterScore
 	}
 	score += (int)(math.Ceil(s.wordMultiplier(ctx, string(bonusLetters)) * float64(bonusScore)))
@@ -111,12 +108,12 @@ func (s *scorer) Score(ctx context.Context, board *entity.Board, solution entity
 	return score, nil
 }
 
-func scoreLetter(_ context.Context, board *entity.Board, availableLetters map[rune]int, row, col int, letter rune, shouldSkipAvailabilityCheck bool) (int, error) {
+func scoreLetter(_ context.Context, board *entity.Board, availableLetters map[rune]int, row, col int, letter rune) (int, error) {
 	if letter == ' ' {
 		return 0, nil
 	}
 	tile, ok := board.Tiles[letter]
-	if !shouldSkipAvailabilityCheck && (!ok || availableLetters[letter] < 1) {
+	if !ok || availableLetters[letter] < 1 {
 		return 0, InvalidLetterError{letter: letter}
 	}
 	availableLetters[letter]--
