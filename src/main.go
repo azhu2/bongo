@@ -33,12 +33,13 @@ func main() {
 		),
 		fx.Invoke(func(lifecycle fx.Lifecycle, shutdowner fx.Shutdowner, handler handler.Handler) {
 			lifecycle.Append(fx.StartHook(func(ctx context.Context) {
-				err := handler.Solve(ctx, date)
+				solution, score, err := handler.Solve(ctx, date)
 				if err != nil {
 					slog.Error("error in solver",
 						"err", err,
 					)
 				}
+				slog.Info("solution found", "solution", solution, "score", score)
 				shutdowner.Shutdown()
 			}))
 		}),

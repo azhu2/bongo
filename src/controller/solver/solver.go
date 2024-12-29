@@ -3,6 +3,8 @@ package solver
 import (
 	"context"
 	"log/slog"
+	"maps"
+	"slices"
 	"strings"
 
 	"go.uber.org/fx"
@@ -21,7 +23,7 @@ var Module = fx.Module("solver",
 )
 
 type Controller interface {
-	Solve(context.Context, *entity.Board, *entity.WordListDAG) error
+	Solve(context.Context, *entity.Board, *entity.WordListDAG) (entity.Solution, error)
 }
 
 type Params struct {
@@ -48,10 +50,24 @@ func New(p Params) (Result, error) {
 	}, nil
 }
 
-func (s *solver) Solve(ctx context.Context, board *entity.Board, words *entity.WordListDAG) error {
+func (s *solver) Solve(ctx context.Context, board *entity.Board, words *entity.WordListDAG) (entity.Solution, error) {
+	// The DAG can't really work backwards with letters in the middle, so this is a problem...
+	// Ignore for now, but I'd really like to use it to narrow the solution space.
+	// Maybe make the DAG doubly-linked?
 	s.generateBonusCandidates(ctx, board, words)
 
-	return nil
+	availableLetters := map[rune]int{}
+	for letter, tile := range board.Tiles {
+		availableLetters[letter] = tile.Count
+	}
+	solution := s.evaluateRow(ctx, board, words, partialSolution{
+		solution:         entity.EmptySolution(),
+		availableLetters: availableLetters,
+		wildcardCount:    0,
+		rowsFilled:       0,
+	})
+
+	return solution, nil
 }
 
 type bonusCandidate struct {
@@ -107,4 +123,85 @@ func (s *solver) generateBonusCandidates(ctx context.Context, board *entity.Boar
 
 	slog.Debug("generated bonus word candidates", "count", len(bonusBoards))
 	return bonusBoards
+}
+
+type partialSolution struct {
+	solution         entity.Solution
+	availableLetters map[rune]int
+	wildcardCount    int
+	rowsFilled       int
+}
+
+type partialRow struct {
+	row              []rune
+	node             *entity.WordListDAG
+	availableLetters map[rune]int
+	wildcardCount    int
+}
+
+func (s *solver) evaluateRow(ctx context.Context, board *entity.Board, words *entity.WordListDAG, partial partialSolution) entity.Solution {
+	// Base case
+	if partial.rowsFilled == entity.BoardSize {
+		return partial.solution
+	}
+
+	best := partial.solution
+	bestScore := 0
+
+	nodes := entity.Stack[partialRow]{}
+	nodes.Push(partialRow{
+		node:             words,
+		availableLetters: partial.availableLetters,
+		wildcardCount:    partial.wildcardCount,
+	})
+	for !nodes.IsEmpty() {
+		cur := nodes.Pop()
+		for nextLetter, childNode := range cur.node.Children {
+			isLetterAvailable := partial.availableLetters[nextLetter] > 0
+			if !isLetterAvailable && partial.wildcardCount >= entity.MaxWildcards {
+				continue
+			}
+			letters := maps.Clone(partial.availableLetters)
+			wildcardCount := cur.wildcardCount
+			if isLetterAvailable {
+				letters[nextLetter]--
+			} else {
+				wildcardCount++
+			}
+			nodes.Push(partialRow{
+				row:              append(cur.row, nextLetter),
+				node:             childNode,
+				availableLetters: letters,
+				wildcardCount:    wildcardCount,
+			})
+		}
+		// Start with assuming only 5-letter words to save on search space
+		if cur.node.IsWord && len(cur.row) == entity.BoardSize {
+			nextPartial := slices.Clone(partial.solution)
+			nextPartial.SetRow(partial.rowsFilled, cur.row)
+			remainingLetters := maps.Clone(partial.availableLetters)
+			for _, letter := range cur.row {
+				remainingLetters[letter]--
+			}
+			candidate := s.evaluateRow(ctx, board, words, partialSolution{
+				solution:         nextPartial,
+				availableLetters: remainingLetters,
+				wildcardCount:    cur.wildcardCount,
+				rowsFilled:       partial.rowsFilled + 1,
+			})
+			score, err := s.scorer.Score(ctx, board, candidate)
+			if err != nil {
+				// swallow error and continue
+				slog.Error("invalid board generated", "board", candidate, "err", err)
+				continue
+			}
+			if score > bestScore {
+				best = candidate
+				score = bestScore
+				slog.Debug("new candidate board", "board", candidate, "score", score)
+			}
+		}
+	}
+
+	return best
 }

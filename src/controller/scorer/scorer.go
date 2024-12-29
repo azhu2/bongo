@@ -13,7 +13,6 @@ import (
 
 const (
 	commonMultiplier = 1.3
-	maxWildcards     = 1
 )
 
 var Module = fx.Module("scorer",
@@ -50,7 +49,7 @@ func (s *scorer) Score(ctx context.Context, board *entity.Board, solution entity
 				if errors.Is(err, invalidLetterError{}) {
 					wildcardCount++
 				}
-				if wildcardCount > maxWildcards {
+				if wildcardCount > entity.MaxWildcards {
 					return 0, err
 				}
 			}

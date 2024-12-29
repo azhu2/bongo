@@ -6,8 +6,14 @@ func (s Solution) Get(i, j int) rune {
 	return s[i*BoardSize+j]
 }
 
-func (s Solution) Set(x, y int, letter rune) {
-	s[x*BoardSize+y] = letter
+func (s Solution) Set(i, j int, letter rune) {
+	s[i*BoardSize+j] = letter
+}
+
+func (s Solution) SetRow(i int, word []rune) {
+	for j, letter := range word {
+		s.Set(i, j, letter)
+	}
 }
 
 func (s Solution) Rows() [][]rune {

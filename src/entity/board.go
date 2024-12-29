@@ -1,7 +1,8 @@
 package entity
 
 const (
-	BoardSize = 5
+	BoardSize    = 5
+	MaxWildcards = 1
 )
 
 type Board struct {
