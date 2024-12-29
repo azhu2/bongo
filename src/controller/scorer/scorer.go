@@ -75,12 +75,12 @@ func (s *scorer) Score(ctx context.Context, board *entity.Board, solution entity
 
 	bonusLetters := make([]rune, len(board.BonusWord))
 	bonusScore := 0
-	for _, coords := range board.BonusWord {
+	for i, coords := range board.BonusWord {
 		rowIdx := coords[0]
 		colIdx := coords[1]
 		letter := solution.Get(rowIdx, colIdx)
-		bonusLetters = append(bonusLetters, letter)
-		letterScore, err := scoreLetter(ctx, board, availableLetters, rowIdx, colIdx, letter)
+		bonusLetters[i] = letter
+		letterScore, err := scoreLetter(ctx, board, nil, rowIdx, colIdx, letter)
 		if err != nil && !errors.Is(err, InvalidLetterError{}) {
 			return 0, err
 		}
@@ -96,7 +96,13 @@ func scoreLetter(_ context.Context, board *entity.Board, availableLetters map[ru
 		return 0, nil
 	}
 	tile, ok := board.Tiles[letter]
-	if !ok || availableLetters[letter] < 1 {
+	if !ok {
+		return 0, InvalidLetterError{letter: letter}
+	}
+	if availableLetters == nil {
+		return board.Multipliers[row][col] * tile.Value, nil
+	}
+	if availableLetters[letter] < 1 {
 		return 0, InvalidLetterError{letter: letter}
 	}
 	availableLetters[letter]--
