@@ -17,7 +17,9 @@ import (
 	"github.com/azhu2/bongo/src/handler"
 )
 
-const date = "2024-12-28"
+const (
+	date = "2024-12-29"
+)
 
 func main() {
 	slog.SetLogLoggerLevel(slog.LevelDebug)
@@ -36,15 +38,17 @@ func main() {
 			return c.BuildDAG(context.Background())
 		}),
 		fx.Invoke(func(lifecycle fx.Lifecycle, shutdowner fx.Shutdowner, handler handler.Handler) {
-			lifecycle.Append(fx.StartHook(func(ctx context.Context) {
-				solution, score, err := handler.Solve(ctx, date)
-				if err != nil {
-					slog.Error("error in solver",
-						"err", err,
-					)
-				}
-				slog.Info("solution found", "solution", solution, "score", score)
-				shutdowner.Shutdown()
+			lifecycle.Append(fx.StartHook(func(_ context.Context) {
+				go func() {
+					solution, score, err := handler.Solve(context.Background(), date)
+					if err != nil {
+						slog.Error("error in solver",
+							"err", err,
+						)
+					}
+					slog.Info("solution found", "solution", solution, "score", score)
+					shutdowner.Shutdown()
+				}()
 			}))
 		}),
 	).Run()
