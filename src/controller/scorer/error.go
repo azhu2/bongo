@@ -2,15 +2,15 @@ package scorer
 
 import "fmt"
 
-type invalidLetterError struct {
+type InvalidLetterError struct {
 	letter rune
 }
 
-func (e invalidLetterError) Error() string {
+func (e InvalidLetterError) Error() string {
 	return fmt.Sprintf("solution has invalid letter: %c", e.letter)
 }
 
-func (e invalidLetterError) Is(target error) bool {
-	_, ok := target.(invalidLetterError)
+func (e InvalidLetterError) Is(target error) bool {
+	_, ok := target.(InvalidLetterError)
 	return ok
 }

@@ -2,10 +2,10 @@ package solver
 
 import (
 	"context"
+	"errors"
 	"log/slog"
 	"maps"
 	"slices"
-	"strings"
 
 	"go.uber.org/fx"
 
@@ -54,24 +54,31 @@ func New(p Params) (Result, error) {
 }
 
 func (s *solver) Solve(ctx context.Context, board *entity.Board) (entity.Solution, error) {
-	// The DAG can't really work backwards with letters in the middle, so this is a problem...
-	// Ignore for now, but I'd really like to use it to narrow the solution space.
-	// Maybe make the DAG doubly-linked?
-	// s.generateBonusCandidates(ctx, board, words)
+	candidates := s.generateBonusCandidates(ctx, board)
 
 	availableLetters := map[rune]int{}
 	for letter, tile := range board.Tiles {
 		availableLetters[letter] = tile.Count
 	}
-	globalBest := 0
-	solution := s.evaluateRow(ctx, board, partialSolution{
-		solution:         entity.EmptySolution(),
-		availableLetters: availableLetters,
-		wildcardCount:    0,
-		rowsFilled:       0,
-	}, &globalBest)
+	globalBest := entity.EmptySolution()
+	globalBestScore := 0
 
-	return solution, nil
+	for _, candidate := range candidates {
+		remainingLetters := maps.Clone(availableLetters)
+		for _, letter := range candidate {
+			if letter != ' ' {
+				remainingLetters[letter]--
+			}
+		}
+		s.evaluateRow(ctx, board, partialSolution{
+			solution:         candidate,
+			availableLetters: remainingLetters,
+			wildcardCount:    0,
+			rowsFilled:       0,
+		}, &globalBest, &globalBestScore)
+	}
+
+	return globalBest, nil
 }
 
 type bonusCandidate struct {
@@ -90,7 +97,7 @@ func (s *solver) generateBonusCandidates(ctx context.Context, board *entity.Boar
 		for _, child := range cur.Children {
 			nodes.Push(child)
 		}
-		// Assume all bonus word letters must be filled (sometimes false)
+		// Assume all bonus word letters must be filled (not true - it sometimes can have a wildcard)
 		if cur.IsWord && len(cur.Fragment) == len(board.BonusWord) {
 			candidate := entity.EmptySolution()
 			for i, b := range board.BonusWord {
@@ -99,7 +106,7 @@ func (s *solver) generateBonusCandidates(ctx context.Context, board *entity.Boar
 			score, err := s.scorer.Score(ctx, board, candidate)
 			if err != nil {
 				// TODO Type this
-				if !strings.Contains(err.Error(), "solution has invalid letter") {
+				if !errors.Is(err, scorer.InvalidLetterError{}) {
 					slog.Error("unable to score bonus word candidate; continuing",
 						"candidate", candidate,
 						"err", err,
@@ -115,6 +122,10 @@ func (s *solver) generateBonusCandidates(ctx context.Context, board *entity.Boar
 			}
 		}
 	}
+
+	slices.SortFunc(candidates, func(a, b bonusCandidate) int {
+		return b.score - a.score
+	})
 
 	// Filter once more to avoid repeatedly rebalancing and trimming a tree
 	// Another option is a priority queue with a fixed size
@@ -142,7 +153,7 @@ type partialRow struct {
 	wildcardCount    int
 }
 
-func (s *solver) evaluateRow(ctx context.Context, board *entity.Board, partial partialSolution, globalBest *int) entity.Solution {
+func (s *solver) evaluateRow(ctx context.Context, board *entity.Board, partial partialSolution, globalBest *entity.Solution, globalBestScore *int) entity.Solution {
 	// Base case
 	if partial.rowsFilled == entity.BoardSize {
 		return partial.solution
@@ -190,7 +201,7 @@ func (s *solver) evaluateRow(ctx context.Context, board *entity.Board, partial p
 				availableLetters: remainingLetters,
 				wildcardCount:    cur.wildcardCount,
 				rowsFilled:       partial.rowsFilled + 1,
-			}, globalBest)
+			}, globalBest, globalBestScore)
 			score, err := s.scorer.Score(ctx, board, candidate)
 			if err != nil {
 				// swallow error and continue
@@ -200,9 +211,10 @@ func (s *solver) evaluateRow(ctx context.Context, board *entity.Board, partial p
 			if score > bestScore {
 				best = candidate
 				bestScore = score
-				if score > *globalBest {
+				if score > *globalBestScore {
 					slog.Debug("new best board", "board", candidate, "score", score)
-					*globalBest = score
+					*globalBest = candidate
+					*globalBestScore = score
 				}
 			}
 		}

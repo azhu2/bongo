@@ -56,7 +56,7 @@ func (s *scorer) Score(ctx context.Context, board *entity.Board, solution entity
 		for colIdx, letter := range row {
 			letterScore, err := scoreLetter(ctx, board, rowIdx, colIdx, letter)
 			if err != nil {
-				if errors.Is(err, invalidLetterError{}) {
+				if errors.Is(err, InvalidLetterError{}) {
 					wildcardCount++
 				}
 				if wildcardCount > entity.MaxWildcards {
@@ -76,7 +76,7 @@ func (s *scorer) Score(ctx context.Context, board *entity.Board, solution entity
 		letter := solution.Get(rowIdx, colIdx)
 		bonusLetters = append(bonusLetters, letter)
 		letterScore, err := scoreLetter(ctx, board, rowIdx, colIdx, letter)
-		if err != nil && !errors.Is(err, invalidLetterError{}) {
+		if err != nil && !errors.Is(err, InvalidLetterError{}) {
 			return 0, err
 		}
 		bonusScore += letterScore
@@ -92,7 +92,7 @@ func scoreLetter(_ context.Context, board *entity.Board, row, col int, letter ru
 	}
 	tile, ok := board.Tiles[letter]
 	if !ok {
-		return 0, invalidLetterError{letter: letter}
+		return 0, InvalidLetterError{letter: letter}
 	}
 	return board.Multipliers[row][col] * tile.Value, nil
 }
