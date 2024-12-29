@@ -30,7 +30,7 @@ type Params struct {
 	fx.In
 
 	Scorer   scorer.Controller
-	WordList *entity.WordListDAG
+	WordList *entity.WordList
 }
 
 type Result struct {
@@ -41,7 +41,7 @@ type Result struct {
 
 type solver struct {
 	scorer   scorer.Controller
-	wordList *entity.WordListDAG
+	wordList *entity.WordList
 }
 
 func New(p Params) (Result, error) {
@@ -83,8 +83,8 @@ func (s *solver) generateBonusCandidates(ctx context.Context, board *entity.Boar
 	candidates := []bonusCandidate{}
 
 	maxValue := 0
-	nodes := entity.Stack[*entity.WordListDAG]{}
-	nodes.Push(s.wordList)
+	nodes := entity.Stack[*entity.DAGNode]{}
+	nodes.Push(s.wordList.Root)
 	for !nodes.IsEmpty() {
 		cur := nodes.Pop()
 		for _, child := range cur.Children {
@@ -137,7 +137,7 @@ type partialSolution struct {
 }
 
 type partialRow struct {
-	node             *entity.WordListDAG
+	node             *entity.DAGNode
 	availableLetters map[rune]int
 	wildcardCount    int
 }
@@ -153,7 +153,7 @@ func (s *solver) evaluateRow(ctx context.Context, board *entity.Board, partial p
 
 	rowCandidates := entity.Stack[partialRow]{}
 	rowCandidates.Push(partialRow{
-		node:             s.wordList,
+		node:             s.wordList.Root,
 		availableLetters: partial.availableLetters,
 		wildcardCount:    partial.wildcardCount,
 	})

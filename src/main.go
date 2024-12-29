@@ -8,10 +8,10 @@ import (
 	"go.uber.org/fx"
 
 	"github.com/azhu2/bongo/src/config/secrets"
-	"github.com/azhu2/bongo/src/controller/dag"
 	"github.com/azhu2/bongo/src/controller/parser"
 	"github.com/azhu2/bongo/src/controller/scorer"
 	"github.com/azhu2/bongo/src/controller/solver"
+	"github.com/azhu2/bongo/src/controller/wordlist"
 	"github.com/azhu2/bongo/src/entity"
 	"github.com/azhu2/bongo/src/gateway/gameimporter"
 	"github.com/azhu2/bongo/src/handler"
@@ -24,7 +24,7 @@ const (
 func main() {
 	slog.SetLogLoggerLevel(slog.LevelDebug)
 	fx.New(
-		dag.Module,
+		wordlist.Module,
 		handler.Module,
 		gameimporter.GraphqlModule,
 		parser.Module,
@@ -34,8 +34,8 @@ func main() {
 		fx.Supply(
 			graphql.NewClient(gameimporter.GraphqlEndpoint),
 		),
-		fx.Provide(func(c dag.Controller) (*entity.WordListDAG, error) {
-			return c.BuildDAG(context.Background())
+		fx.Provide(func(c wordlist.Controller) (*entity.WordList, error) {
+			return c.BuildWordList(context.Background())
 		}),
 		fx.Invoke(func(lifecycle fx.Lifecycle, shutdowner fx.Shutdowner, handler handler.Handler) {
 			lifecycle.Append(fx.StartHook(func(_ context.Context) {

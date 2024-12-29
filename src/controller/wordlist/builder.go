@@ -1,4 +1,4 @@
-package dag
+package wordlist
 
 import (
 	"context"
@@ -11,13 +11,13 @@ import (
 	"github.com/azhu2/bongo/src/gateway/wordlistimporter"
 )
 
-var Module = fx.Module("dagbuilder",
+var Module = fx.Module("wordlist",
 	wordlistimporter.Module,
 	fx.Provide(New),
 )
 
 type Controller interface {
-	BuildDAG(ctx context.Context) (*entity.WordListDAG, error)
+	BuildWordList(ctx context.Context) (*entity.WordList, error)
 }
 
 type Params struct {
@@ -44,31 +44,43 @@ func New(p Params) (Result, error) {
 	}, nil
 }
 
-func (c *controller) BuildDAG(ctx context.Context) (*entity.WordListDAG, error) {
+func (c *controller) BuildWordList(ctx context.Context) (*entity.WordList, error) {
 	wordList, err := c.importer.ImportWordList(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("could not import word list %w", err)
 	}
 
-	root := entity.WordListDAG{
+	root := entity.DAGNode{
 		Fragment: []rune{},
-		Children: make(map[rune]*entity.WordListDAG),
+		Children: make(map[rune]*entity.DAGNode),
 	}
+	nodeMap := make(map[int]map[rune][]*entity.DAGNode)
 
 	for _, word := range wordList {
 		node := &root
-		stack := entity.Stack[*entity.WordListDAG]{}
+		stack := entity.Stack[*entity.DAGNode]{}
 
-		for _, letter := range word {
+		for i, letter := range word {
 			if child, ok := node.Children[letter]; ok {
+				// Move current pointer to existing child node
 				node = child
 			} else {
-				child := &entity.WordListDAG{
+				// Create new child node
+				child := &entity.DAGNode{
 					Fragment: append(node.Fragment, letter),
-					Children: make(map[rune]*entity.WordListDAG),
+					Children: make(map[rune]*entity.DAGNode),
+					Prev:     node,
 				}
 				node.Children[letter] = child
 				node = child
+
+				// Add to node map
+				var mapEntry map[rune][]*entity.DAGNode
+				if mapEntry = nodeMap[i]; mapEntry == nil {
+					mapEntry = map[rune][]*entity.DAGNode{}
+				}
+				mapEntry[letter] = append(mapEntry[letter], child)
+
 			}
 			stack.Push(node)
 		}
@@ -77,5 +89,8 @@ func (c *controller) BuildDAG(ctx context.Context) (*entity.WordListDAG, error) 
 
 	slog.Debug("processed words into DAG")
 
-	return &root, nil
+	return &entity.WordList{
+		Root:    &root,
+		NodeMap: nodeMap,
+	}, nil
 }

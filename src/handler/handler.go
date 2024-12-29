@@ -5,7 +5,6 @@ import (
 
 	"go.uber.org/fx"
 
-	"github.com/azhu2/bongo/src/controller/dag"
 	"github.com/azhu2/bongo/src/controller/parser"
 	"github.com/azhu2/bongo/src/controller/scorer"
 	"github.com/azhu2/bongo/src/controller/solver"
@@ -26,10 +25,9 @@ type Params struct {
 
 	GameImporter gameimporter.Gateway
 
-	DAGBuilder dag.Controller
-	Parser     parser.Controller
-	Scorer     scorer.Controller
-	Solver     solver.Controller
+	Parser parser.Controller
+	Scorer scorer.Controller
+	Solver solver.Controller
 }
 
 type Result struct {
@@ -41,10 +39,9 @@ type Result struct {
 type handler struct {
 	gameImporter gameimporter.Gateway
 
-	dagBuilder dag.Controller
-	parser     parser.Controller
-	scorer     scorer.Controller
-	solver     solver.Controller
+	parser parser.Controller
+	scorer scorer.Controller
+	solver solver.Controller
 }
 
 func New(p Params) (Result, error) {
@@ -52,10 +49,9 @@ func New(p Params) (Result, error) {
 		Handler: &handler{
 			gameImporter: p.GameImporter,
 
-			dagBuilder: p.DAGBuilder,
-			parser:     p.Parser,
-			scorer:     p.Scorer,
-			solver:     p.Solver,
+			parser: p.Parser,
+			scorer: p.Scorer,
+			solver: p.Solver,
 		},
 	}, nil
 }

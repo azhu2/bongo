@@ -26,7 +26,7 @@ type Controller interface {
 type Params struct {
 	fx.In
 
-	WordList *entity.WordListDAG
+	WordList *entity.WordList
 }
 
 type Result struct {
@@ -36,7 +36,7 @@ type Result struct {
 }
 
 type scorer struct {
-	wordList *entity.WordListDAG
+	wordList *entity.WordList
 }
 
 func New(p Params) (Result, error) {
@@ -110,7 +110,7 @@ func (s *scorer) wordMultiplier(ctx context.Context, word string) float64 {
 }
 
 func (s *scorer) isWord(_ context.Context, word string) bool {
-	node := s.wordList
+	node := s.wordList.Root
 	for _, letter := range word {
 		if child := node.Children[letter]; child != nil {
 			node = child
