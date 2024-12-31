@@ -7,6 +7,7 @@ import (
 	"maps"
 	"slices"
 	"strings"
+	"sync"
 
 	"go.uber.org/fx"
 
@@ -54,6 +55,11 @@ func New(p Params) (Result, error) {
 	}, nil
 }
 
+type candidateSolution struct {
+	solution entity.Solution
+	score    int
+}
+
 func (s *solver) Solve(ctx context.Context, board *entity.Board) (entity.Solution, error) {
 	// Start by generating bonus words
 	candidates := s.generateBonusCandidates(ctx, board)
@@ -62,8 +68,11 @@ func (s *solver) Solve(ctx context.Context, board *entity.Board) (entity.Solutio
 	for letter, tile := range board.Tiles {
 		availableLetters[letter] = tile.Count
 	}
-	globalBest := entity.EmptySolution()
-	globalBestScore := 0
+
+	var wg sync.WaitGroup
+	best := candidateSolution{
+		score: 0,
+	}
 
 	// Then seed the recursive row-by-row solver with bonus words already set in grid
 	for _, candidate := range candidates {
@@ -73,24 +82,32 @@ func (s *solver) Solve(ctx context.Context, board *entity.Board) (entity.Solutio
 				remainingLetters[letter]--
 			}
 		}
-		s.evaluateRow(ctx, board, partialSolution{
-			solution:         candidate,
-			availableLetters: remainingLetters,
-			wildcardCount:    0,
-			curRow:           0,
-		}, &globalBest, &globalBestScore)
+		wg.Add(1)
+		solutionChan := make(chan candidateSolution)
+		go func() {
+			defer wg.Done()
+			s.evaluateRow(ctx, board, partialSolution{
+				solution:         candidate,
+				availableLetters: remainingLetters,
+				wildcardCount:    0,
+				curRow:           0,
+			}, solutionChan)
+			close(solutionChan)
+		}()
+		for solution := range solutionChan {
+			if solution.score > best.score {
+				slog.Debug("new best board", "board", solution.solution, "score", solution.score)
+				best = solution
+			}
+		}
 	}
 
-	return globalBest, nil
-}
-
-type bonusCandidate struct {
-	solution entity.Solution
-	score    int
+	wg.Wait()
+	return best.solution, nil
 }
 
 func (s *solver) generateBonusCandidates(ctx context.Context, board *entity.Board) []entity.Solution {
-	candidates := []bonusCandidate{}
+	candidates := []candidateSolution{}
 
 	maxValue := 0
 	nodes := entity.Stack[*entity.DAGNode]{}
@@ -135,12 +152,12 @@ func (s *solver) generateBonusCandidates(ctx context.Context, board *entity.Boar
 				maxValue = score
 			}
 			if score >= int(bonusCandidateMultiplier*float64(maxValue)) {
-				candidates = append(candidates, bonusCandidate{solution: candidate, score: score})
+				candidates = append(candidates, candidateSolution{solution: candidate, score: score})
 			}
 		}
 	}
 
-	slices.SortFunc(candidates, func(a, b bonusCandidate) int {
+	slices.SortFunc(candidates, func(a, b candidateSolution) int {
 		return b.score - a.score
 	})
 
@@ -173,7 +190,7 @@ type partialRow struct {
 	wildcardCount    int
 }
 
-func (s *solver) evaluateRow(ctx context.Context, board *entity.Board, partial partialSolution, globalBest *entity.Solution, globalBestScore *int) entity.Solution {
+func (s *solver) evaluateRow(ctx context.Context, board *entity.Board, partial partialSolution, solutions chan<- candidateSolution) entity.Solution {
 	// Base case
 	if partial.curRow == entity.BoardSize {
 		return partial.solution
@@ -267,7 +284,7 @@ func (s *solver) evaluateRow(ctx context.Context, board *entity.Board, partial p
 				availableLetters: remainingLetters,
 				wildcardCount:    cur.wildcardCount,
 				curRow:           partial.curRow + 1,
-			}, globalBest, globalBestScore)
+			}, solutions)
 			score, err := s.scorer.Score(ctx, board, candidate)
 			if err != nil {
 				// swallow error and continue
@@ -277,11 +294,10 @@ func (s *solver) evaluateRow(ctx context.Context, board *entity.Board, partial p
 			if score > bestScore {
 				best = candidate
 				bestScore = score
-				if score > *globalBestScore {
-					slog.Debug("new best board", "board", candidate, "score", score)
-					*globalBest = candidate
-					*globalBestScore = score
-				}
+			}
+			solutions <- candidateSolution{
+				solution: candidate,
+				score:    score,
 			}
 		}
 	}
