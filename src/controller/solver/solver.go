@@ -95,6 +95,7 @@ func (s *solver) Solve(ctx context.Context, board *entity.Board) ([]entity.Solut
 		}()
 		for solution := range solutionChan {
 			if solution.score == bestScore {
+				slog.Debug("new best board (tied)", "board", solution.solution, "score", solution.score)
 				best = append(best, solution.solution)
 			} else if solution.score > bestScore {
 				slog.Debug("new best board", "board", solution.solution, "score", solution.score)
