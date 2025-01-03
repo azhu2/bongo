@@ -116,8 +116,11 @@ func (s *solver) generateBonusCandidates(ctx context.Context, board *entity.Boar
 	nodes.Push(s.wordList.Root)
 	for !nodes.IsEmpty() {
 		cur := nodes.Pop()
-		for _, child := range cur.Children {
-			nodes.Push(child)
+		for letter, child := range cur.Children {
+			// Assume all bonus tiles used
+			if letter != ' ' {
+				nodes.Push(child)
+			}
 		}
 		if cur.IsWord && len(cur.Fragment) == len(board.BonusWord) {
 			candidate := entity.EmptySolution()
