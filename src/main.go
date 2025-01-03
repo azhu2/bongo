@@ -18,7 +18,7 @@ import (
 )
 
 const (
-	date = "2025-01-02"
+	date = "2025-01-03"
 )
 
 func main() {
@@ -40,13 +40,16 @@ func main() {
 		fx.Invoke(func(lifecycle fx.Lifecycle, shutdowner fx.Shutdowner, handler handler.Handler) {
 			lifecycle.Append(fx.StartHook(func(_ context.Context) {
 				go func() {
-					solution, score, err := handler.Solve(context.Background(), date)
+					solutions, score, err := handler.Solve(context.Background(), date)
 					if err != nil {
 						slog.Error("error in solver",
 							"err", err,
 						)
 					}
-					slog.Info("solution found", "solution", solution, "score", score)
+					slog.Info("solution found", "score", score)
+					for _, solution := range solutions {
+						slog.Info(solution.String())
+					}
 					shutdowner.Shutdown()
 				}()
 			}))

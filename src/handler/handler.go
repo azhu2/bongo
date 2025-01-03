@@ -17,7 +17,7 @@ var Module = fx.Module("handler",
 )
 
 type Handler interface {
-	Solve(ctx context.Context, date string) (entity.Solution, int, error)
+	Solve(ctx context.Context, date string) ([]entity.Solution, int, error)
 }
 
 type Params struct {
@@ -56,7 +56,7 @@ func New(p Params) (Result, error) {
 	}, nil
 }
 
-func (h *handler) Solve(ctx context.Context, date string) (entity.Solution, int, error) {
+func (h *handler) Solve(ctx context.Context, date string) ([]entity.Solution, int, error) {
 	boardData, err := h.gameImporter.ImportBoard(ctx, date)
 	if err != nil {
 		return nil, 0, err
@@ -68,15 +68,15 @@ func (h *handler) Solve(ctx context.Context, date string) (entity.Solution, int,
 		return nil, 0, err
 	}
 
-	solution, err := h.solver.Solve(ctx, board)
+	solutions, err := h.solver.Solve(ctx, board)
 	if err != nil {
 		return nil, 0, err
 	}
 
-	score, err := h.scorer.Score(ctx, board, solution)
+	score, err := h.scorer.Score(ctx, board, solutions[0])
 	if err != nil {
 		return nil, 0, err
 	}
 
-	return solution, score, err
+	return solutions, score, err
 }

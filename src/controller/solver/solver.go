@@ -25,7 +25,7 @@ var Module = fx.Module("solver",
 )
 
 type Controller interface {
-	Solve(context.Context, *entity.Board) (entity.Solution, error)
+	Solve(context.Context, *entity.Board) ([]entity.Solution, error)
 }
 
 type Params struct {
@@ -60,7 +60,7 @@ type candidateSolution struct {
 	score    int
 }
 
-func (s *solver) Solve(ctx context.Context, board *entity.Board) (entity.Solution, error) {
+func (s *solver) Solve(ctx context.Context, board *entity.Board) ([]entity.Solution, error) {
 	// Start by generating bonus words
 	candidates := s.generateBonusCandidates(ctx, board)
 
@@ -70,9 +70,8 @@ func (s *solver) Solve(ctx context.Context, board *entity.Board) (entity.Solutio
 	}
 
 	var wg sync.WaitGroup
-	best := candidateSolution{
-		score: 0,
-	}
+	bestScore := 0
+	best := []entity.Solution{}
 
 	// Then seed the recursive row-by-row solver with bonus words already set in grid
 	for _, candidate := range candidates {
@@ -95,15 +94,18 @@ func (s *solver) Solve(ctx context.Context, board *entity.Board) (entity.Solutio
 			close(solutionChan)
 		}()
 		for solution := range solutionChan {
-			if solution.score > best.score {
+			if solution.score == bestScore {
+				best = append(best, solution.solution)
+			} else if solution.score > bestScore {
 				slog.Debug("new best board", "board", solution.solution, "score", solution.score)
-				best = solution
+				bestScore = solution.score
+				best = []entity.Solution{solution.solution}
 			}
 		}
 	}
 
 	wg.Wait()
-	return best.solution, nil
+	return best, nil
 }
 
 func (s *solver) generateBonusCandidates(ctx context.Context, board *entity.Board) []entity.Solution {
@@ -189,13 +191,13 @@ type partialRow struct {
 	wildcardCount    int
 }
 
-func (s *solver) evaluateRow(ctx context.Context, board *entity.Board, partial partialSolution, solutions chan<- candidateSolution) entity.Solution {
+func (s *solver) evaluateRow(ctx context.Context, board *entity.Board, partial partialSolution, solutions chan<- candidateSolution) []entity.Solution {
 	// Base case
 	if partial.curRow == entity.BoardSize {
-		return partial.solution
+		return []entity.Solution{partial.solution}
 	}
 
-	best := partial.solution
+	best := []entity.Solution{partial.solution}
 	bestScore := 0
 
 	rowCandidates := entity.Stack[partialRow]{}
@@ -278,25 +280,31 @@ func (s *solver) evaluateRow(ctx context.Context, board *entity.Board, partial p
 					}
 				}
 			}
-			candidate := s.evaluateRow(ctx, board, partialSolution{
+			candidates := s.evaluateRow(ctx, board, partialSolution{
 				solution:         nextPartial,
 				availableLetters: remainingLetters,
 				wildcardCount:    cur.wildcardCount,
 				curRow:           partial.curRow + 1,
 			}, solutions)
-			score, err := s.scorer.Score(ctx, board, candidate)
+			score, err := s.scorer.Score(ctx, board, candidates[0])
 			if err != nil {
 				// swallow error and continue
-				slog.Error("invalid board generated", "board", candidate, "err", err)
+				slog.Error("invalid board generated", "board", candidates, "err", err)
 				continue
 			}
-			if score > bestScore {
-				best = candidate
+			if score == bestScore {
+				best = append(best, candidates...)
+			} else if score >= bestScore {
+				best = candidates
 				bestScore = score
-			}
-			solutions <- candidateSolution{
-				solution: candidate,
-				score:    score,
+				if partial.curRow == entity.BoardSize-1 {
+					for _, candidate := range candidates {
+						solutions <- candidateSolution{
+							solution: candidate,
+							score:    score,
+						}
+					}
+				}
 			}
 		}
 	}
