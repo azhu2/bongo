@@ -85,6 +85,16 @@ func (c *controller) BuildWordList(ctx context.Context) (*entity.WordList, error
 			stack.Push(node)
 		}
 		node.IsWord = true
+		// Add trailing empty nodes
+		for i := len(word); i < entity.BoardSize; i++ {
+			child := entity.DAGNode{
+				Fragment: node.Fragment,
+				Children: make(map[rune]*entity.DAGNode),
+				IsWord:   true,
+			}
+			node.Children[' '] = &child
+			node = &child
+		}
 	}
 
 	slog.Debug("processed words into DAG")
