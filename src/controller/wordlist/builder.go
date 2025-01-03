@@ -98,13 +98,14 @@ func (c *controller) BuildWordList(ctx context.Context) (*entity.WordList, error
 		}
 	}
 
-	// Add leading empty nodes
+	// Add leading empty nodes - not updating nodeMap because bonus words
+	// will never be non-full so no need to backfill partials with leading spaces
 	for i := 0; i < entity.BoardSize-1; i++ {
 		oldRoot := root
 		children := maps.Clone(root.Children)
 		children[' '] = &oldRoot
 		newRoot := entity.DAGNode{
-			Fragment: []rune{},
+			Fragment: []rune{' '},
 			Children: children,
 			IsWord:   false,
 		}
