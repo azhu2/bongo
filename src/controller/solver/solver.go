@@ -16,7 +16,7 @@ import (
 )
 
 const (
-	// Only consider bonus words at least this percent as good as the best one found so far
+	// Only consider bonus words at least this percent as good as the best one
 	bonusCandidateMultiplier = 0.75
 )
 
@@ -117,11 +117,10 @@ func (s *solver) generateBonusCandidates(ctx context.Context, board *entity.Boar
 		for _, child := range cur.Children {
 			nodes.Push(child)
 		}
-		// Assume all bonus word letters must be filled (not true - it sometimes can have a wildcard)
 		if cur.IsWord && len(cur.Fragment) == len(board.BonusWord) {
 			candidate := entity.EmptySolution()
 
-			// Assume no wildcards - make it easier on scorer too
+			// Assume no wildcards in bonus (may not be true)
 			letters := map[rune]int{}
 			isWildCard := false
 			for _, letter := range cur.Fragment {
