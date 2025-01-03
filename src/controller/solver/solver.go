@@ -267,7 +267,8 @@ func (s *solver) evaluateRow(ctx context.Context, board *entity.Board, partial p
 			})
 		}
 
-		// Assuming only 5-letter words to save on search space
+		// Only score 5-letter fragments to avoid recounting the same candidate with/without spaces.
+		// This words because the DAG is padded with leading and trailing spaces.
 		if cur.node.IsWord && len(cur.node.Fragment) == entity.BoardSize {
 			nextPartial := slices.Clone(partial.solution)
 			nextPartial.SetRow(partial.curRow, cur.node.Fragment)

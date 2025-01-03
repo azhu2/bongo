@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log/slog"
+	"maps"
 	"slices"
 
 	"go.uber.org/fx"
@@ -88,13 +89,26 @@ func (c *controller) BuildWordList(ctx context.Context) (*entity.WordList, error
 		// Add trailing empty nodes
 		for i := len(word); i < entity.BoardSize; i++ {
 			child := entity.DAGNode{
-				Fragment: node.Fragment,
+				Fragment: append(slices.Clone(node.Fragment), ' '),
 				Children: make(map[rune]*entity.DAGNode),
 				IsWord:   true,
 			}
 			node.Children[' '] = &child
 			node = &child
 		}
+	}
+
+	// Add leading empty nodes
+	for i := 0; i < entity.BoardSize-1; i++ {
+		oldRoot := root
+		children := maps.Clone(root.Children)
+		children[' '] = &oldRoot
+		newRoot := entity.DAGNode{
+			Fragment: []rune{},
+			Children: children,
+			IsWord:   false,
+		}
+		root = newRoot
 	}
 
 	slog.Debug("processed words into DAG")
