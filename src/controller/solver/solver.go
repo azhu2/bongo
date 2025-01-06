@@ -169,15 +169,17 @@ func (s *solver) generateBonusCandidates(ctx context.Context, board *entity.Boar
 	// Filter once at the end to avoid repeatedly rebalancing and trimming a tree
 	// Another option is a priority queue with a fixed size
 	bonusBoards := []entity.Solution{}
+	logMsg := ""
 	for _, candidate := range candidates {
 		if candidate.score >= int(bonusCandidateMultiplier*float64(maxValue)) {
 			bonusBoards = append(bonusBoards, candidate.solution)
+			logMsg += strings.ReplaceAll(strings.ReplaceAll(string(candidate.solution), "|", ""), " ", "") + "|"
 		}
 	}
 
 	slog.Debug("generated bonus word candidates",
 		"count", len(bonusBoards),
-		"best", strings.ReplaceAll(strings.ReplaceAll(string(bonusBoards[0]), "|", ""), " ", ""),
+		"words", logMsg,
 	)
 	return bonusBoards
 }
