@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"log/slog"
+	"time"
 
 	"github.com/machinebox/graphql"
 	"go.uber.org/fx"
@@ -40,13 +41,14 @@ func main() {
 		fx.Invoke(func(lifecycle fx.Lifecycle, shutdowner fx.Shutdowner, handler handler.Handler) {
 			lifecycle.Append(fx.StartHook(func(_ context.Context) {
 				go func() {
+					start := time.Now()
 					solutions, score, err := handler.Solve(context.Background(), date)
 					if err != nil {
 						slog.Error("error in solver",
 							"err", err,
 						)
 					}
-					slog.Info("solution found", "score", score)
+					slog.Info("solution found", "score", score, "time", time.Since(start))
 					for _, solution := range solutions {
 						slog.Info(solution.String())
 					}
