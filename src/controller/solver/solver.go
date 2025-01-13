@@ -255,7 +255,7 @@ func (s *solver) evaluateRow(ctx context.Context, board *entity.Board, partial p
 		cur := rowCandidates.Pop()
 		for nextLetter, childNode := range cur.node.Children {
 			// Add valid children nodes
-			isLetterAvailable := cur.availableLetters[nextLetter] > 0 || nextLetter == ' '
+			isLetterAvailable := cur.availableLetters[nextLetter] > 0
 			if !isLetterAvailable && cur.wildcardCount >= entity.MaxWildcards {
 				continue
 			}
