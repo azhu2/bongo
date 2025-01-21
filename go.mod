@@ -1,6 +1,6 @@
 module github.com/azhu2/bongo
 
-go 1.18
+go 1.23
 
 require (
 	github.com/joho/godotenv v1.5.1
