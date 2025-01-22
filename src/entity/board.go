@@ -6,8 +6,9 @@ import (
 )
 
 const (
-	BoardSize    = 5
-	MaxWildcards = 1
+	BoardSize        = 5
+	MaxWildcards     = 1
+	CommonMultiplier = 1.3
 )
 
 type Board struct {

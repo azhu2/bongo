@@ -11,10 +11,6 @@ import (
 	"github.com/azhu2/bongo/src/entity"
 )
 
-const (
-	commonMultiplier = 1.3
-)
-
 var Module = fx.Module("scorer",
 	fx.Provide(New),
 )
@@ -127,7 +123,7 @@ func (s *scorer) wordMultiplier(ctx context.Context, word string) float64 {
 		return 0
 	}
 	if s.isCommon(ctx, trimmed) {
-		return commonMultiplier
+		return entity.CommonMultiplier
 	}
 	return 1
 }

@@ -5,6 +5,7 @@ import (
 	"errors"
 	"log/slog"
 	"maps"
+	"math"
 	"slices"
 	"strings"
 	"sync"
@@ -42,8 +43,9 @@ type Result struct {
 }
 
 type solver struct {
-	scorer   scorer.Controller
-	wordList *entity.WordList
+	scorer    scorer.Controller
+	wordList  *entity.WordList
+	bestScore int
 }
 
 func New(p Params) (Result, error) {
@@ -70,7 +72,6 @@ func (s *solver) Solve(ctx context.Context, board *entity.Board) ([]entity.Solut
 	}
 
 	var wg sync.WaitGroup
-	bestScore := 0
 	best := []entity.Solution{}
 
 	// Then seed the recursive row-by-row solver with bonus words already set in grid
@@ -94,12 +95,12 @@ func (s *solver) Solve(ctx context.Context, board *entity.Board) ([]entity.Solut
 			close(solutionChan)
 		}()
 		for solution := range solutionChan {
-			if solution.score == bestScore {
+			if solution.score == s.bestScore {
 				slog.Debug("new best board (tied)", "board", solution.solution, "score", solution.score)
 				best = append(best, solution.solution)
-			} else if solution.score > bestScore {
+			} else if solution.score > s.bestScore {
 				slog.Debug("new best board", "board", solution.solution, "score", solution.score)
-				bestScore = solution.score
+				s.bestScore = solution.score
 				best = []entity.Solution{solution.solution}
 			}
 		}
@@ -200,6 +201,12 @@ type partialRow struct {
 func (s *solver) evaluateRow(ctx context.Context, board *entity.Board, partial partialSolution, solutions chan<- candidateSolution) []entity.Solution {
 	// Base case
 	if partial.curRow == entity.BoardSize {
+		return []entity.Solution{partial.solution}
+	}
+
+	// Short-circuit if not possible to beat current max
+	max := s.getTheoreticalMax(ctx, board, partial)
+	if max < s.bestScore {
 		return []entity.Solution{partial.solution}
 	}
 
@@ -317,4 +324,109 @@ func (s *solver) evaluateRow(ctx context.Context, board *entity.Board, partial p
 	}
 
 	return best
+}
+
+func (s *solver) getTheoreticalMax(ctx context.Context, board *entity.Board, partial partialSolution) int {
+	potentialSolution := slices.Clone(partial.solution)
+
+	// Count what's already set in partial
+	score, err := s.scorer.Score(ctx, board, potentialSolution)
+	if err != nil {
+		// Swallow and ignore this branch
+		slog.Error("Unable to score partial board",
+			"board", partial.solution,
+			"err", err,
+		)
+		return 0
+	}
+
+	// Extract sorted coords of all non-blank multpliers
+	type multiplierCoord struct {
+		coord      []int
+		multiplier int
+	}
+	multiplierCoords := []multiplierCoord{}
+	for row, rowData := range board.Multipliers {
+		if row < partial.curRow {
+			// Already counted
+			continue
+		}
+		for col, multipler := range rowData {
+			if multipler > 1 {
+				multiplierCoords = append(multiplierCoords, multiplierCoord{
+					coord:      []int{row, col},
+					multiplier: multipler,
+				})
+			}
+		}
+	}
+	slices.SortFunc(multiplierCoords, func(i, j multiplierCoord) int {
+		return i.multiplier - j.multiplier
+	})
+
+	// Place letters in multplier slots
+	sortedTiles := board.SortedTiles()
+	tileIdx := 0
+	remainingLetters := maps.Clone(partial.availableLetters)
+	for _, multiplier := range multiplierCoords {
+		for ; ; tileIdx++ {
+			if remainingLetters[sortedTiles[tileIdx]] < 1 {
+				continue
+			}
+			letter := sortedTiles[tileIdx]
+			remainingLetters[letter]--
+			potentialSolution.Set(multiplier.coord[0], multiplier.coord[1], letter)
+			if remainingLetters[letter] < 1 {
+				tileIdx++
+			}
+			break
+		}
+	}
+
+	// Place remaining letters
+	for row := partial.curRow; row < entity.BoardSize; row++ {
+		for col := 0; col < entity.BoardSize; col++ {
+			if potentialSolution.Get(row, col) != ' ' {
+				continue
+			}
+			for ; ; tileIdx++ {
+				if tileIdx >= len(sortedTiles) {
+					break
+				}
+				if remainingLetters[sortedTiles[tileIdx]] < 1 {
+					continue
+				}
+				letter := sortedTiles[tileIdx]
+				remainingLetters[letter]--
+				potentialSolution.Set(row, col, letter)
+				if remainingLetters[letter] < 1 {
+					tileIdx++
+				}
+				break
+			}
+		}
+	}
+
+	// Count rows
+	for row := partial.curRow; row < entity.BoardSize; row++ {
+		rowScore := 0
+		for col, letter := range potentialSolution.GetRow(row) {
+			rowScore += board.Tiles[letter].Value * board.Multipliers[row][col]
+		}
+		// Fudge by 1 for rounding
+		score += int(math.Ceil(float64(rowScore)*entity.CommonMultiplier)) + 1
+	}
+
+	// Count bonus word if needed
+	if partial.curRow <= board.BonusWord[len(board.BonusWord)-1][0] {
+		bonusScore := 0
+		for _, bonusCoord := range board.BonusWord {
+			letter := potentialSolution.Get(bonusCoord[0], bonusCoord[1])
+			bonusScore += board.Tiles[letter].Value * board.Multipliers[bonusCoord[0]][bonusCoord[1]]
+		}
+		// Fudge by 1 for rounding
+		score += int(math.Ceil(float64(bonusScore)*entity.CommonMultiplier)) + 1
+	}
+
+	return score
 }
