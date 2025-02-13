@@ -18,10 +18,6 @@ import (
 	"github.com/azhu2/bongo/src/handler"
 )
 
-const (
-	date = "2025-01-22"
-)
-
 func main() {
 	slog.SetLogLoggerLevel(slog.LevelDebug)
 	fx.New(
@@ -42,7 +38,8 @@ func main() {
 			lifecycle.Append(fx.StartHook(func(_ context.Context) {
 				go func() {
 					start := time.Now()
-					solutions, score, err := handler.Solve(context.Background(), date)
+					serverTime, _ := time.LoadLocation("America/Chicago")
+					solutions, score, err := handler.Solve(context.Background(), time.Now().In(serverTime).Format("2006-01-02"))
 					if err != nil {
 						slog.Error("error in solver",
 							"err", err,
