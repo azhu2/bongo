@@ -18,7 +18,7 @@ import (
 
 const (
 	// Only consider bonus words at least this percent as good as the best one
-	bonusCandidateMultiplier = 0.75
+	bonusCandidateMultiplier = 0.6
 )
 
 var Module = fx.Module("solver",
