@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log/slog"
+	"strings"
 
 	"github.com/machinebox/graphql"
 	"go.uber.org/fx"
@@ -37,6 +38,11 @@ func NewGraphql(p Params) (Result, error) {
 }
 
 func (g *graphqlGateway) ImportBoard(ctx context.Context, date string) (string, error) {
+	return g.importBoardFromDailyScreen(ctx, date)
+}
+
+// (legacy) importing directly from game screen. Assumes game slug
+func (g *graphqlGateway) importBoardFromGameScreen(ctx context.Context, date string) (string, error) {
 	req := graphql.NewRequest(`
 		query PlayGameScreenQuery(
 			$finderKey: String!
@@ -82,4 +88,57 @@ func (g *graphqlGateway) ImportBoard(ctx context.Context, date string) (string, 
 	)
 
 	return board, err
+}
+
+// Import board from daily game screen. Grabs the first game with "bongo" in its slug
+func (g *graphqlGateway) importBoardFromDailyScreen(ctx context.Context, date string) (string, error) {
+	req := graphql.NewRequest(`
+		query TodayScreenQuery(
+			$day: String
+		) {
+			todayPage(day: $day) {
+				daily {
+					puzzles {
+						urlPath
+						puzzle {
+							game {
+								slug
+							}
+							puzzle
+						}
+					}
+				}
+			}
+		}
+	`)
+	req.Var("day", date)
+	req.Header.Set("context-type", "application/json")
+	req.Header.Set("authorization", g.authToken)
+	req.Header.Set("auth-provider", "custom")
+	req.Header.Set("puzzmo-gameplay-id", g.userID)
+
+	var resp graphqlTodayScreenResponse
+	err := g.graphqlClient.Run(ctx, req, &resp)
+
+	if err != nil {
+		return "", fmt.Errorf("unable to fetch daily puzzles from Puzzmo %w", err)
+	}
+
+	for _, puzzle := range resp.TodayPage.Daily.Puzzles {
+		if strings.Contains(puzzle.Puzzle.Game.Slug, "bongo") {
+			board := puzzle.Puzzle.Puzzle
+			if len(board) > 0 {
+				slog.Debug("loaded game board",
+					"source", "graphql",
+					"slug", puzzle.Puzzle.Game.Slug,
+				)
+				return board, nil
+			}
+			slog.Warn("found empty board",
+				"slug", puzzle.Puzzle.Game.Slug,
+			)
+		}
+	}
+
+	return "", fmt.Errorf("no bongo boards found")
 }

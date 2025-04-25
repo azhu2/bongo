@@ -38,8 +38,10 @@ func main() {
 			lifecycle.Append(fx.StartHook(func(_ context.Context) {
 				go func() {
 					start := time.Now()
-					serverTime, _ := time.LoadLocation("America/Chicago")
-					solutions, score, err := handler.Solve(context.Background(), time.Now().In(serverTime).Format("2006-01-02"))
+					// Explicit date not needed if loading from daily screen
+					// serverTime, _ := time.LoadLocation("America/Chicago")
+					// time.Now().In(serverTime).Format("2006-01-02")
+					solutions, score, err := handler.Solve(context.Background(), "")
 					if err != nil {
 						slog.Error("error in solver",
 							"err", err,

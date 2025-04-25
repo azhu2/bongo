@@ -9,3 +9,19 @@ type graphqlBoardResponse struct {
 		}
 	}
 }
+
+type graphqlTodayScreenResponse struct {
+	TodayPage struct {
+		Daily struct {
+			Puzzles []struct {
+				UrlPath string
+				Puzzle  struct {
+					Puzzle string
+					Game   struct {
+						Slug string
+					}
+				}
+			}
+		}
+	}
+}
